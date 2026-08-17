@@ -13,7 +13,21 @@ import 'sessao.dart';
  * ================================================================== */
 const String kApiBase = 'https://dev.mindi.com.br';
 
+/* ------------------------------------------------------------------ *
+ *  SENHA DO AMBIENTE DE TESTES (basic auth do servidor)
+ *
+ *  Deixe VAZIO quando o servidor liberar as rotas /api/driver/
+ *  (é o caso agora). Se um dia a portaria voltar, é só preencher.
+ * ------------------------------------------------------------------ */
+const String kBasicUsuario = '';
+const String kBasicSenha = '';
+
 bool get apiConfigurada => kApiBase.trim().isNotEmpty;
+bool get temBasic => kBasicUsuario.isNotEmpty;
+
+/// monta o 'Basic xxxxx' a partir do usuário e senha
+String get _basic =>
+    'Basic ${base64Encode(utf8.encode('$kBasicUsuario:$kBasicSenha'))}';
 
 /// Erro vindo da API, já com mensagem pronta para mostrar na tela
 class ApiErro implements Exception {
@@ -32,12 +46,23 @@ class Api {
     return query == null ? u : u.replace(queryParameters: query);
   }
 
-  static Map<String, String> _cabecalhos({bool comToken = true}) => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        if (comToken && Sessao.token != null)
-          'Authorization': 'Bearer ${Sessao.token}',
-      };
+  static Map<String, String> _cabecalhos({bool comToken = true}) {
+    final h = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (comToken && Sessao.token != null) {
+      // chamadas normais: token do entregador
+      h['Authorization'] = 'Bearer ${Sessao.token}';
+      // o servidor de testes também pede a senha do ambiente
+      if (temBasic) h['X-Basic-Auth'] = _basic;
+    } else if (temBasic) {
+      // login: ainda não existe token, então vai só a senha do ambiente
+      h['Authorization'] = _basic;
+    }
+    return h;
+  }
 
   /* ---------------- tratamento das respostas ---------------- */
   static dynamic _tratar(http.Response r) {
@@ -157,7 +182,7 @@ class Api {
     try {
       final r = await http
           .post(_url('/api/driver/auth/refresh'),
-              headers: {'Content-Type': 'application/json'},
+              headers: _cabecalhos(comToken: false),
               body: jsonEncode({'refreshToken': Sessao.refreshToken}))
           .timeout(_timeout);
       if (r.statusCode != 200) return false;
@@ -223,7 +248,77 @@ class Api {
   }
 
   /* ================================================================ *
-   *  5. GANHOS (usado no perfil para contar as entregas)
+   *  4. PEDIDOS
+   * ================================================================ */
+
+  /// GET /api/driver/orders/available — pedidos prontos, sem entregador
+  static Future<List<Map<String, dynamic>>> pedidosDisponiveis() async {
+    final r = await _enviar('GET', '/api/driver/orders/available');
+    return _lista(r, 'orders');
+  }
+
+  /// GET /api/driver/orders/mine — pedidos que já são meus
+  static Future<List<Map<String, dynamic>>> meusPedidos() async {
+    final r = await _enviar('GET', '/api/driver/orders/mine');
+    return _lista(r, 'orders');
+  }
+
+  /// GET /api/driver/orders/:id — detalhe completo
+  static Future<Map<String, dynamic>> detalhePedido(int id) async {
+    final r = await _enviar('GET', '/api/driver/orders/$id');
+    return (r as Map).cast<String, dynamic>();
+  }
+
+  /// POST /api/driver/orders/:id/accept — aceitar
+  static Future<void> aceitarPedido(int id) =>
+      _enviar('POST', '/api/driver/orders/$id/accept');
+
+  /// POST /api/driver/orders/:id/depart — saiu para entrega (avisa o cliente)
+  static Future<void> sairParaEntrega(int id) =>
+      _enviar('POST', '/api/driver/orders/$id/depart');
+
+  /// POST /api/driver/orders/:id/arrived — cheguei no local (avisa o cliente)
+  static Future<void> cheguei(int id) =>
+      _enviar('POST', '/api/driver/orders/$id/arrived');
+
+  /// POST /api/driver/orders/:id/deliver — entregue
+  static Future<void> entregar(int id) =>
+      _enviar('POST', '/api/driver/orders/$id/deliver');
+
+  /// POST /api/driver/orders/:id/problem — relatar problema
+  static Future<void> relatarProblema(int id,
+          {required String tipo, String? descricao}) =>
+      _enviar('POST', '/api/driver/orders/$id/problem', corpo: {
+        'type': tipo,
+        if (descricao != null && descricao.isNotEmpty) 'description': descricao,
+      });
+
+  /* ================================================================ *
+   *  5. HISTÓRICO E GANHOS
+   * ================================================================ */
+
+  /// GET /api/driver/history?from=&to=
+  static Future<List<Map<String, dynamic>>> historico({
+    required DateTime de,
+    required DateTime ate,
+  }) async {
+    final r = await _enviar('GET', '/api/driver/history',
+        query: {'from': _data(de), 'to': _data(ate)});
+    return _lista(r, 'deliveries');
+  }
+
+  static List<Map<String, dynamic>> _lista(dynamic r, String chave) {
+    if (r is Map && r[chave] is List) {
+      return (r[chave] as List)
+          .whereType<Map>()
+          .map((e) => e.cast<String, dynamic>())
+          .toList();
+    }
+    return const [];
+  }
+
+  /* ================================================================ *
+   *  RESUMO DE GANHOS
    * ================================================================ */
 
   /// GET /api/driver/earnings?from=&to=

@@ -1,126 +1,191 @@
 /* ================================================================== *
- *  MODELOS — as "fichas" de dados que o app usa
+ *  MODELOS — traduzem o JSON da API para o app
  * ================================================================== */
 
-/// Um pedido/entrega
+/// converte "8.00", 8, 8.0 ou null em número
+double _num(dynamic v) {
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v.replaceAll(',', '.')) ?? 0;
+  return 0;
+}
+
+int _int(dynamic v) {
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  return int.tryParse('$v') ?? 0;
+}
+
+String reais(double v) => 'R\$ ${v.toStringAsFixed(2).replaceAll('.', ',')}';
+String reaisCurto(double v) => 'R\$ ${v.toStringAsFixed(0)}';
+
+/// nome bonito da forma de pagamento
+String formaPagamento(String? p) {
+  switch ((p ?? '').toLowerCase()) {
+    case 'cash':
+    case 'dinheiro':
+      return 'Dinheiro';
+    case 'pix':
+      return 'PIX';
+    case 'card':
+    case 'credit':
+    case 'debit':
+    case 'cartao':
+      return 'Cartão';
+    case 'online':
+      return 'Pago online';
+    default:
+      return p == null || p.isEmpty ? '—' : p;
+  }
+}
+
+/* ================================================================== *
+ *  PEDIDO
+ * ================================================================== */
 class Pedido {
-  final String id;
+  final int id;
+  final String numero; // "#P0045"
+  final String cliente;
   final String endereco;
-  final String bairro;
-  final String km;
+  final String status;
+
+  /// quanto o entregador ganha
+  final double taxa;
+
+  /// valor do pedido (o que o cliente paga)
+  final double total;
+
   final int itens;
   final String pagamento;
 
-  /// quanto o entregador ganha nessa corrida
-  final double valor;
-
-  // ---- dados usados na tela de detalhes ----
-  final String cliente;
-  final String complemento;
-  final String observacao;
-
-  /// quanto ele precisa receber do cliente (0 se já está pago)
-  final double aReceber;
-
-  /// para quanto o cliente vai pagar (0 se não precisa de troco)
+  // ---- só vêm no detalhe ----
+  final String? telefone;
+  final String? observacao;
   final double trocoPara;
+  final String? mapsUrl;
+  final List<String> produtos;
 
   const Pedido({
     required this.id,
+    required this.numero,
+    required this.cliente,
     required this.endereco,
-    required this.bairro,
-    required this.km,
+    required this.status,
+    required this.taxa,
+    required this.total,
     required this.itens,
     required this.pagamento,
-    required this.valor,
-    this.cliente = '',
-    this.complemento = '',
-    this.observacao = '',
-    this.aReceber = 0,
+    this.telefone,
+    this.observacao,
     this.trocoPara = 0,
+    this.mapsUrl,
+    this.produtos = const [],
   });
 
-  String get valorFormatado => _reais(valor);
-  String get valorCurto => 'R\$ ${valor.toStringAsFixed(0)}';
-  double get kmNumero =>
-      double.tryParse(km.replaceAll(',', '.')) ?? 0;
+  factory Pedido.fromJson(Map<String, dynamic> j) {
+    final itensLista = (j['items'] is List) ? (j['items'] as List) : const [];
+    return Pedido(
+      id: _int(j['id']),
+      numero: (j['orderNumber'] ?? '#${j['id']}').toString(),
+      cliente: (j['customerName'] ?? '').toString(),
+      endereco: (j['customerAddress'] ?? '').toString(),
+      status: (j['status'] ?? '').toString(),
+      taxa: _num(j['deliveryFee']),
+      total: _num(j['total']),
+      itens: j['itemCount'] != null ? _int(j['itemCount']) : itensLista.length,
+      pagamento: formaPagamento(j['paymentMethod']?.toString()),
+      telefone: j['customerPhone']?.toString(),
+      observacao: j['notes']?.toString(),
+      trocoPara: _num(j['changeAmount']),
+      mapsUrl: j['mapsUrl']?.toString(),
+      produtos: itensLista
+          .whereType<Map>()
+          .map((i) => '${_int(i['quantity'])}x ${i['name']}')
+          .toList(),
+    );
+  }
 
-  bool get precisaTroco => trocoPara > aReceber && aReceber > 0;
-  double get troco => trocoPara - aReceber;
+  /// junta o detalhe novo com o que já tínhamos
+  Pedido comDetalhe(Pedido d) => Pedido(
+        id: d.id,
+        numero: d.numero.isNotEmpty ? d.numero : numero,
+        cliente: d.cliente.isNotEmpty ? d.cliente : cliente,
+        endereco: d.endereco.isNotEmpty ? d.endereco : endereco,
+        status: d.status.isNotEmpty ? d.status : status,
+        taxa: d.taxa > 0 ? d.taxa : taxa,
+        total: d.total > 0 ? d.total : total,
+        itens: d.itens > 0 ? d.itens : itens,
+        pagamento: d.pagamento != '—' ? d.pagamento : pagamento,
+        telefone: d.telefone ?? telefone,
+        observacao: d.observacao ?? observacao,
+        trocoPara: d.trocoPara > 0 ? d.trocoPara : trocoPara,
+        mapsUrl: d.mapsUrl ?? mapsUrl,
+        produtos: d.produtos.isNotEmpty ? d.produtos : produtos,
+      );
+
+  String get taxaFormatada => reais(taxa);
+  String get taxaCurta => reaisCurto(taxa);
+  String get totalFormatado => reais(total);
+
+  /// precisa receber dinheiro na entrega?
+  bool get recebeNaEntrega =>
+      pagamento == 'Dinheiro' || pagamento == 'PIX' || pagamento == 'Cartão';
+  bool get precisaTroco => trocoPara > total && total > 0;
+  double get troco => trocoPara - total;
+
+  bool get emRota => status == 'out_for_delivery';
 }
 
-String _reais(double v) => 'R\$ ${v.toStringAsFixed(2).replaceAll('.', ',')}';
-String reais(double v) => _reais(v);
-
-/// Um pedido que já foi aceito e está em andamento
+/// Um pedido aceito que ainda está em andamento
 class EntregaAtiva {
-  final Pedido pedido;
+  Pedido pedido;
 
-  /// false = aceito, aguardando sair. true = já saiu para entrega
-  bool emRota;
+  /// já apertou "cheguei no local"?
+  bool chegou;
 
-  EntregaAtiva(this.pedido, {this.emRota = false});
+  EntregaAtiva(this.pedido, {this.chegou = false});
+
+  bool get emRota => pedido.emRota;
 }
 
-/// Uma entrega já concluída (usada no histórico)
+/* ================================================================== *
+ *  ENTREGA CONCLUÍDA (histórico)
+ * ================================================================== */
 class EntregaFeita {
-  final String id;
+  final int id;
+  final String numero;
+  final String cliente;
   final String endereco;
-  final String hora;
-  final String km;
-  final String pagamento;
   final double valor;
-  final DateTime data;
+  final String statusPagamento;
+  final DateTime? concluidaEm;
 
   const EntregaFeita({
     required this.id,
+    required this.numero,
+    required this.cliente,
     required this.endereco,
-    required this.hora,
-    required this.km,
-    required this.pagamento,
     required this.valor,
-    required this.data,
+    required this.statusPagamento,
+    this.concluidaEm,
   });
-}
 
-/* ---- pedidos de exemplo usados pelo botão "Simular novo pedido" ---- */
-const pedidosExemplo = [
-  Pedido(
-    id: 'P1042',
-    endereco: 'Rua Padre Valdevino, 800',
-    bairro: 'Aldeota',
-    km: '3,2',
-    itens: 3,
-    pagamento: 'Dinheiro',
-    valor: 8,
-    cliente: 'Maria Souza',
-    complemento: 'apto 302',
-    observacao: 'Portão azul, tocar campainha 2x. Apartamento 302.',
-    aReceber: 68,
-    trocoPara: 100,
-  ),
-  Pedido(
-    id: 'P1043',
-    endereco: 'Av. Dom Luís, 1200',
-    bairro: 'Meireles',
-    km: '5,1',
-    itens: 2,
-    pagamento: 'PIX',
-    valor: 12,
-    cliente: 'João Pereira',
-    complemento: 'sala 14',
-    observacao: 'Entregar na recepção do prédio.',
-  ),
-  Pedido(
-    id: 'P1044',
-    endereco: 'Rua Silva Jatahy, 45',
-    bairro: 'Centro',
-    km: '1,8',
-    itens: 5,
-    pagamento: 'Cartão',
-    valor: 9,
-    cliente: 'Ana Lima',
-    complemento: 'casa',
-    observacao: 'Cachorro no quintal, chamar do portão.',
-  ),
-];
+  factory EntregaFeita.fromJson(Map<String, dynamic> j) => EntregaFeita(
+        id: _int(j['id']),
+        numero: (j['orderNumber'] ?? '#${j['id']}').toString(),
+        cliente: (j['customerName'] ?? '').toString(),
+        endereco: (j['customerAddress'] ?? '').toString(),
+        valor: _num(j['repasseValue'] ?? j['deliveryFee']),
+        statusPagamento: (j['paymentStatus'] ?? '').toString(),
+        concluidaEm: j['completedAt'] is String
+            ? DateTime.tryParse(j['completedAt'])?.toLocal()
+            : null,
+      );
+
+  String get hora {
+    final d = concluidaEm;
+    if (d == null) return '';
+    return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  }
+
+  bool get pago => statusPagamento == 'paid';
+}

@@ -4,7 +4,6 @@ import 'modelos.dart';
 
 /* ================================================================== *
  *  MODAL DE NOVO PEDIDO
- *  Abre de baixo pra cima, com o fundo escurecido.
  *  Devolve true se o entregador aceitou.
  * ================================================================== */
 Future<bool?> mostrarNovoPedido(BuildContext context, Pedido pedido) {
@@ -12,21 +11,29 @@ Future<bool?> mostrarNovoPedido(BuildContext context, Pedido pedido) {
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withOpacity(.55), // overlay opaco
+    barrierColor: Colors.black.withOpacity(.55),
     builder: (_) => _SheetNovoPedido(pedido: pedido),
   );
 }
 
-class _SheetNovoPedido extends StatelessWidget {
+class _SheetNovoPedido extends StatefulWidget {
   final Pedido pedido;
   const _SheetNovoPedido({required this.pedido});
 
   @override
+  State<_SheetNovoPedido> createState() => _SheetNovoPedidoState();
+}
+
+class _SheetNovoPedidoState extends State<_SheetNovoPedido> {
+  bool _aceitando = false;
+
+  @override
   Widget build(BuildContext context) {
-    final margemInferior = MediaQuery.of(context).padding.bottom;
+    final p = widget.pedido;
+    final margem = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(18, 10, 18, 18 + margemInferior),
+      padding: EdgeInsets.fromLTRB(18, 10, 18, 18 + margem),
       decoration: const BoxDecoration(
         color: T.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -34,7 +41,6 @@ class _SheetNovoPedido extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // pegador
           Container(
             width: 42,
             height: 4,
@@ -45,7 +51,7 @@ class _SheetNovoPedido extends StatelessWidget {
             ),
           ),
 
-          // título + valor
+          // ---------- topo ----------
           Row(
             children: [
               Container(
@@ -70,9 +76,9 @@ class _SheetNovoPedido extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                             color: T.ink,
                             letterSpacing: -.4)),
-                    Text('Pedido #${pedido.id}',
-                        style: const TextStyle(
-                            fontSize: 13, color: T.inkSoft)),
+                    Text('Pedido ${p.numero}',
+                        style:
+                            const TextStyle(fontSize: 13, color: T.inkSoft)),
                   ],
                 ),
               ),
@@ -83,7 +89,7 @@ class _SheetNovoPedido extends StatelessWidget {
                   color: const Color(0xFFE8F7EE),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(pedido.valorFormatado,
+                child: Text(p.taxaFormatada,
                     style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -93,7 +99,7 @@ class _SheetNovoPedido extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // endereço
+          // ---------- endereço ----------
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(14),
@@ -105,40 +111,50 @@ class _SheetNovoPedido extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.location_on_outlined, size: 17, color: T.green),
-                    SizedBox(width: 7),
-                    Text('Entrega',
-                        style: TextStyle(
+                    const Icon(Icons.location_on_outlined,
+                        size: 17, color: T.green),
+                    const SizedBox(width: 7),
+                    Text(p.cliente.isEmpty ? 'Entrega' : p.cliente,
+                        style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: T.ink)),
                   ],
                 ),
                 const SizedBox(height: 7),
-                Text('${pedido.endereco} — ${pedido.bairro}',
-                    style: const TextStyle(fontSize: 14, color: Color(0xFF4A4F5C))),
+                Text(p.endereco,
+                    style: const TextStyle(
+                        fontSize: 14, color: Color(0xFF4A4F5C), height: 1.35)),
               ],
             ),
           ),
           const SizedBox(height: 12),
 
-          // 3 caixinhas
+          // ---------- 3 caixinhas ----------
           Row(
             children: [
-              _Caixa(rotulo: 'Distância', valor: '${pedido.km} km'),
+              _Caixa(
+                  rotulo: 'Itens',
+                  valor: '${p.itens} ${p.itens == 1 ? 'item' : 'itens'}'),
               const SizedBox(width: 10),
-              _Caixa(rotulo: 'Itens', valor: '${pedido.itens} itens'),
+              _Caixa(rotulo: 'Pagamento', valor: p.pagamento),
               const SizedBox(width: 10),
-              _Caixa(rotulo: 'Pagamento', valor: pedido.pagamento),
+              _Caixa(rotulo: 'Pedido', valor: p.totalFormatado),
             ],
           ),
           const SizedBox(height: 18),
 
-          // botão aceitar
+          // ---------- aceitar ----------
           GestureDetector(
-            onTap: () => Navigator.of(context).pop(true),
+            behavior: HitTestBehavior.opaque,
+            onTap: _aceitando
+                ? null
+                : () {
+                    setState(() => _aceitando = true);
+                    Navigator.of(context).pop(true);
+                  },
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 17),
@@ -153,16 +169,26 @@ class _SheetNovoPedido extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Aceitar entrega',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white)),
-                  SizedBox(width: 9),
-                  Icon(Icons.check_rounded, size: 20, color: Colors.white),
+                  if (_aceitando)
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2.4, color: Colors.white),
+                    )
+                  else ...[
+                    const Text('Aceitar entrega',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white)),
+                    const SizedBox(width: 9),
+                    const Icon(Icons.check_rounded,
+                        size: 20, color: Colors.white),
+                  ],
                 ],
               ),
             ),
@@ -191,7 +217,7 @@ class _Caixa extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 11),
+        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 4),
         decoration: BoxDecoration(
           color: const Color(0xFFF7F8FA),
           borderRadius: BorderRadius.circular(14),
@@ -203,8 +229,10 @@ class _Caixa extends StatelessWidget {
                 style: const TextStyle(fontSize: 11.5, color: T.inkSoft)),
             const SizedBox(height: 2),
             Text(valor,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w800,
                     color: T.ink,
                     letterSpacing: -.3)),

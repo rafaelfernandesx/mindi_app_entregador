@@ -4,41 +4,44 @@ import 'modelos.dart';
 
 /* ================================================================== *
  *  MODAL DE DETALHES DO PEDIDO
- *  Devolve 'entregue' se o entregador marcou como entregue.
+ *  Devolve: 'chegou', 'entregue', 'problema' ou null
  * ================================================================== */
-Future<String?> mostrarDetalhesPedido(BuildContext context, Pedido pedido) {
+Future<String?> mostrarDetalhesPedido(
+  BuildContext context,
+  Pedido pedido, {
+  bool jaChegou = false,
+}) {
   return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withOpacity(.55),
-    builder: (_) => _SheetDetalhes(pedido: pedido),
+    builder: (_) => _SheetDetalhes(pedido: pedido, jaChegou: jaChegou),
   );
 }
 
 class _SheetDetalhes extends StatelessWidget {
   final Pedido pedido;
-  const _SheetDetalhes({required this.pedido});
+  final bool jaChegou;
+  const _SheetDetalhes({required this.pedido, required this.jaChegou});
 
-  void _aviso(BuildContext context, String texto) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(texto),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: T.dark2,
-      ),
-    );
+  void _aviso(BuildContext c, String texto) {
+    ScaffoldMessenger.of(c).showSnackBar(SnackBar(
+      content: Text(texto),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: T.dark2,
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
     final p = pedido;
-    final margemInferior = MediaQuery.of(context).padding.bottom;
+    final margem = MediaQuery.of(context).padding.bottom;
     final alturaMax = MediaQuery.of(context).size.height * .88;
 
     return Container(
       constraints: BoxConstraints(maxHeight: alturaMax),
-      padding: EdgeInsets.fromLTRB(18, 10, 18, 18 + margemInferior),
+      padding: EdgeInsets.fromLTRB(18, 10, 18, 18 + margem),
       decoration: const BoxDecoration(
         color: T.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -75,7 +78,7 @@ class _SheetDetalhes extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Pedido #${p.id}',
+                    Text('Pedido ${p.numero}',
                         style: const TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
@@ -120,16 +123,11 @@ class _SheetDetalhes extends StatelessWidget {
                                 color: T.ink,
                                 letterSpacing: -.3)),
                         const SizedBox(height: 4),
-                        Text(
-                            p.complemento.isEmpty
-                                ? p.endereco
-                                : '${p.endereco} · ${p.complemento}',
+                        Text(p.endereco,
                             style: const TextStyle(
-                                fontSize: 14, color: Color(0xFF4A4F5C))),
-                        const SizedBox(height: 2),
-                        Text(p.bairro,
-                            style:
-                                const TextStyle(fontSize: 13, color: T.inkSoft)),
+                                fontSize: 14,
+                                color: Color(0xFF4A4F5C),
+                                height: 1.35)),
                         const SizedBox(height: 13),
                         Row(
                           children: [
@@ -137,21 +135,21 @@ class _SheetDetalhes extends StatelessWidget {
                               icone: Icons.map_outlined,
                               texto: 'Abrir rota',
                               onTap: () => _aviso(context,
-                                  'Aqui o app abre o Google Maps na rota'),
+                                  p.mapsUrl ?? 'Rota indisponível para este pedido'),
                             ),
                             const SizedBox(width: 8),
                             _BotaoContato(
                               icone: Icons.phone_outlined,
                               texto: 'Ligar',
-                              onTap: () =>
-                                  _aviso(context, 'Aqui o app liga pro cliente'),
+                              onTap: () => _aviso(
+                                  context, p.telefone ?? 'Telefone não informado'),
                             ),
                             const SizedBox(width: 8),
                             _BotaoContato(
-                              icone: Icons.chat_bubble_outline_rounded,
-                              texto: 'WhatsApp',
-                              onTap: () => _aviso(
-                                  context, 'Aqui o app abre a conversa no WhatsApp'),
+                              icone: Icons.report_gmailerrorred_rounded,
+                              texto: 'Problema',
+                              onTap: () =>
+                                  Navigator.of(context).pop('problema'),
                             ),
                           ],
                         ),
@@ -160,11 +158,31 @@ class _SheetDetalhes extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
+                  // ---------- itens ----------
+                  if (p.produtos.isNotEmpty) ...[
+                    _Bloco(
+                      titulo: 'ITENS DO PEDIDO',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (final i in p.produtos)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text('• $i',
+                                  style: const TextStyle(
+                                      fontSize: 14, color: Color(0xFF4A4F5C))),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
                   // ---------- observações ----------
-                  if (p.observacao.isNotEmpty) ...[
+                  if ((p.observacao ?? '').isNotEmpty) ...[
                     _Bloco(
                       titulo: 'OBSERVAÇÕES',
-                      child: Text(p.observacao,
+                      child: Text(p.observacao!,
                           style: const TextStyle(
                               fontSize: 14,
                               color: Color(0xFF4A4F5C),
@@ -174,7 +192,7 @@ class _SheetDetalhes extends StatelessWidget {
                   ],
 
                   // ---------- valor a receber ----------
-                  if (p.aReceber > 0)
+                  if (p.total > 0)
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
@@ -192,7 +210,8 @@ class _SheetDetalhes extends StatelessWidget {
                                   letterSpacing: 1,
                                   color: Color(0xFF9A6B0F))),
                           const SizedBox(height: 6),
-                          Text('${reais(p.aReceber)} em ${p.pagamento.toLowerCase()}',
+                          Text(
+                              '${p.totalFormatado} em ${p.pagamento.toLowerCase()}',
                               style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w800,
@@ -201,7 +220,7 @@ class _SheetDetalhes extends StatelessWidget {
                           if (p.precisaTroco) ...[
                             const SizedBox(height: 4),
                             Text(
-                                'Levar troco para ${reais(p.trocoPara)} — leve ${reais(p.troco)}.',
+                                'Cliente vai pagar com ${reais(p.trocoPara)} — leve ${reais(p.troco)} de troco.',
                                 style: const TextStyle(
                                     fontSize: 13.5, color: Color(0xFF7A6224))),
                           ],
@@ -214,8 +233,38 @@ class _SheetDetalhes extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
+          // ---------- cheguei no local ----------
+          if (p.emRota && !jaChegou) ...[
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => Navigator.of(context).pop('chegou'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE7E9EE), width: 1.5),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.pin_drop_outlined, size: 18, color: T.ink),
+                    SizedBox(width: 8),
+                    Text('Cheguei no local',
+                        style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            color: T.ink)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+
           // ---------- marcar como entregue ----------
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).pop('entregue'),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 15),
@@ -233,13 +282,8 @@ class _SheetDetalhes extends StatelessWidget {
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircleAvatar(
-                    radius: 17,
-                    backgroundColor: Color(0x33FFFFFF),
-                    child: Icon(Icons.chevron_right_rounded,
-                        size: 24, color: Colors.white),
-                  ),
-                  SizedBox(width: 12),
+                  Icon(Icons.check_circle_rounded, size: 22, color: Colors.white),
+                  SizedBox(width: 10),
                   Text('MARCAR COMO ENTREGUE',
                       style: TextStyle(
                           fontSize: 15,
@@ -259,8 +303,14 @@ class _SheetDetalhes extends StatelessWidget {
 /* ================================================================== *
  *  MODAL "CLIENTE NOTIFICADO"
  * ================================================================== */
-Future<void> mostrarClienteNotificado(BuildContext context, Pedido pedido) {
-  final primeiroNome =
+Future<void> mostrarClienteNotificado(
+  BuildContext context,
+  Pedido pedido, {
+  String titulo = 'Cliente notificado!',
+  String texto =
+      'Uma mensagem foi enviada via WhatsApp informando que a entrega está a caminho.',
+}) {
+  final primeiro =
       pedido.cliente.isEmpty ? 'O cliente' : pedido.cliente.split(' ').first;
 
   return showModalBottomSheet<void>(
@@ -269,9 +319,9 @@ Future<void> mostrarClienteNotificado(BuildContext context, Pedido pedido) {
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withOpacity(.55),
     builder: (context) {
-      final margemInferior = MediaQuery.of(context).padding.bottom;
+      final margem = MediaQuery.of(context).padding.bottom;
       return Container(
-        padding: EdgeInsets.fromLTRB(18, 22, 18, 18 + margemInferior),
+        padding: EdgeInsets.fromLTRB(18, 22, 18, 18 + margem),
         decoration: const BoxDecoration(
           color: T.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -298,16 +348,16 @@ Future<void> mostrarClienteNotificado(BuildContext context, Pedido pedido) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Cliente notificado!',
-                          style: TextStyle(
+                      Text(titulo,
+                          style: const TextStyle(
                               fontSize: 19,
                               fontWeight: FontWeight.w800,
                               color: T.ink,
                               letterSpacing: -.4)),
                       const SizedBox(height: 2),
-                      Text('$primeiroNome recebeu que o pedido está a caminho',
+                      Text('$primeiro foi avisado',
                           style: const TextStyle(
-                              fontSize: 13.5, color: T.inkSoft, height: 1.35)),
+                              fontSize: 13.5, color: T.inkSoft)),
                     ],
                   ),
                 ),
@@ -321,14 +371,13 @@ Future<void> mostrarClienteNotificado(BuildContext context, Pedido pedido) {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFFCDEBD8)),
               ),
-              child: const Text(
-                'Uma mensagem foi enviada via WhatsApp informando que a entrega está a caminho.',
-                style: TextStyle(
-                    fontSize: 14, color: Color(0xFF2F7D4B), height: 1.4),
-              ),
+              child: Text(texto,
+                  style: const TextStyle(
+                      fontSize: 14, color: Color(0xFF2F7D4B), height: 1.4)),
             ),
             const SizedBox(height: 18),
             GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () => Navigator.of(context).pop(),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -348,6 +397,156 @@ Future<void> mostrarClienteNotificado(BuildContext context, Pedido pedido) {
         ),
       );
     },
+  );
+}
+
+/* ================================================================== *
+ *  MODAL DE PROBLEMA
+ * ================================================================== */
+Future<Map<String, String>?> mostrarProblema(BuildContext context) {
+  final tipos = {
+    'client_absent': 'Cliente não atendeu',
+    'wrong_address': 'Endereço errado',
+    'access_blocked': 'Não consegui acessar o local',
+    'other': 'Outro problema',
+  };
+  final controle = TextEditingController();
+  String escolhido = 'client_absent';
+
+  return showModalBottomSheet<Map<String, String>>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withOpacity(.55),
+    builder: (context) => StatefulBuilder(
+      builder: (context, setSheet) {
+        final teclado = MediaQuery.of(context).viewInsets.bottom;
+        final margem = MediaQuery.of(context).padding.bottom;
+        return Padding(
+          padding: EdgeInsets.only(bottom: teclado),
+          child: Container(
+            padding: EdgeInsets.fromLTRB(18, 20, 18, 18 + margem),
+            decoration: const BoxDecoration(
+              color: T.card,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text('Relatar um problema',
+                    style: TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                        color: T.ink,
+                        letterSpacing: -.4)),
+                const SizedBox(height: 4),
+                const Text('O restaurante recebe o aviso na hora.',
+                    style: TextStyle(fontSize: 13, color: T.inkSoft)),
+                const SizedBox(height: 16),
+
+                for (final e in tipos.entries)
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => setSheet(() => escolhido = e.key),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 13),
+                      decoration: BoxDecoration(
+                        color: escolhido == e.key
+                            ? const Color(0xFFFDECEC)
+                            : const Color(0xFFF7F8FA),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: escolhido == e.key
+                                ? T.redDark
+                                : const Color(0xFFEDEEF2),
+                            width: escolhido == e.key ? 1.5 : 1),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                              escolhido == e.key
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_unchecked,
+                              size: 19,
+                              color: escolhido == e.key
+                                  ? T.redDark
+                                  : const Color(0xFFC6CAD3)),
+                          const SizedBox(width: 10),
+                          Text(e.value,
+                              style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: escolhido == e.key
+                                      ? T.redDark
+                                      : T.ink)),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 6),
+                TextField(
+                  controller: controle,
+                  maxLines: 3,
+                  style: const TextStyle(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'Conte o que aconteceu (opcional)',
+                    hintStyle: const TextStyle(color: Color(0xFFB9BCC6)),
+                    filled: true,
+                    fillColor: const Color(0xFFF7F8FA),
+                    contentPadding: const EdgeInsets.all(14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: Color(0xFFE7E9EE)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: Color(0xFFE7E9EE)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide:
+                          const BorderSide(color: T.redDark, width: 1.5),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => Navigator.of(context)
+                      .pop({'tipo': escolhido, 'descricao': controle.text}),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      gradient: kGradRed,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Text('Enviar aviso',
+                        style: TextStyle(
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white)),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancelar',
+                      style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: T.inkSoft)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
   );
 }
 
@@ -395,6 +594,7 @@ class _BotaoContato extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 11),

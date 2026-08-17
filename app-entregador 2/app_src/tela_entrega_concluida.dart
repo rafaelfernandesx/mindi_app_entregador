@@ -106,7 +106,7 @@ class TelaEntregaConcluida extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Pedido #${pedido.id}',
+                              Text('Pedido ${pedido.numero}',
                                   style: const TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w800,
@@ -125,9 +125,9 @@ class TelaEntregaConcluida extends StatelessWidget {
                     const _Serrilha(),
                     const SizedBox(height: 4),
 
+                    _Linha(rotulo: 'Cliente', valor: pedido.cliente),
                     _Linha(rotulo: 'Endereço', valor: pedido.endereco),
-                    _Linha(rotulo: 'Bairro', valor: pedido.bairro),
-                    _Linha(rotulo: 'Distância', valor: '${pedido.km} km'),
+                    _Linha(rotulo: 'Pedido', valor: pedido.totalFormatado),
                     _Linha(rotulo: 'Pagamento', valor: pedido.pagamento),
 
                     const SizedBox(height: 6),
@@ -140,7 +140,7 @@ class TelaEntregaConcluida extends StatelessWidget {
                       children: [
                         const Text('Você recebeu',
                             style: TextStyle(fontSize: 12.5, color: T.inkSoft)),
-                        Text(pedido.valorFormatado,
+                        Text(pedido.taxaFormatada,
                             style: const TextStyle(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w800,

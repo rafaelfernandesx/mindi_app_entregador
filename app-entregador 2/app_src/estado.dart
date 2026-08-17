@@ -12,13 +12,19 @@ final abaSelecionada = ValueNotifier<int>(0);
 final entregadorAtivo = ValueNotifier<bool>(true);
 
 /// Números do dia, mostrados no card de resumo da tela Início
-final ganhosHoje = ValueNotifier<double>(84);
-final entregasHoje = ValueNotifier<int>(7);
-final kmHoje = ValueNotifier<double>(31);
+final ganhosHoje = ValueNotifier<double>(0);
+final entregasHoje = ValueNotifier<int>(0);
+final mediaHoje = ValueNotifier<double>(0);
 
-/// Soma uma entrega concluída aos números do dia
-void registrarEntrega({required double valor, required double km}) {
-  ganhosHoje.value += valor;
-  entregasHoje.value += 1;
-  kmHoje.value += km;
+double _paraNumero(dynamic v) {
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v.replaceAll(',', '.')) ?? 0;
+  return 0;
+}
+
+/// Atualiza os números do dia com o que veio da API (/earnings)
+void atualizarResumo({dynamic entregas, dynamic ganhos, dynamic media}) {
+  if (entregas != null) entregasHoje.value = _paraNumero(entregas).toInt();
+  if (ganhos != null) ganhosHoje.value = _paraNumero(ganhos);
+  if (media != null) mediaHoje.value = _paraNumero(media);
 }
