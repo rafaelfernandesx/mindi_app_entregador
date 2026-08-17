@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'tema.dart';
 import 'api.dart';
 import 'modelos.dart';
+import 'sheet_entrega_feita.dart';
 
 class TelaHistorico extends StatefulWidget {
   const TelaHistorico({super.key});
@@ -231,7 +232,10 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF6B7180))),
                     ),
-                    for (final e in grupo.value) _Linha(entrega: e),
+                    for (final e in grupo.value)
+                      _Linha(
+                          entrega: e,
+                          aoTocar: () => mostrarEntregaFeita(context, e)),
                   ],
                 ],
               ),
@@ -354,12 +358,16 @@ class _Vazio extends StatelessWidget {
 /* ---------------- uma entrega do histórico ---------------- */
 class _Linha extends StatelessWidget {
   final EntregaFeita entrega;
-  const _Linha({required this.entrega});
+  final VoidCallback? aoTocar;
+  const _Linha({required this.entrega, this.aoTocar});
 
   @override
   Widget build(BuildContext context) {
     final e = entrega;
-    return Container(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: aoTocar,
+      child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: T.line)),
@@ -415,7 +423,11 @@ class _Linha extends StatelessWidget {
                     style: TextStyle(fontSize: 10, color: Color(0xFF9A6B0F))),
             ],
           ),
+          const SizedBox(width: 2),
+          const Icon(Icons.chevron_right_rounded,
+              size: 19, color: Color(0xFFC7CAD3)),
         ],
+      ),
       ),
     );
   }

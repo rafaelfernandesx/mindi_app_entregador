@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'estado.dart';
 
 /* ================================================================== *
  *  SESSÃO — guarda o token e os dados do entregador logado
@@ -56,6 +57,7 @@ class Sessao {
         driver = {};
       }
     }
+    avisarPerfilMudou();
   }
 
   static Future<void> salvar({
@@ -71,6 +73,7 @@ class Sessao {
     await p.setString(_kToken, token);
     if (refreshToken != null) await p.setString(_kRefresh, refreshToken);
     if (driver != null) await p.setString(_kDriver, jsonEncode(driver));
+    avisarPerfilMudou();
   }
 
   static Future<void> atualizarToken({
@@ -89,6 +92,7 @@ class Sessao {
     driver = {...driver, ...novo};
     final p = await SharedPreferences.getInstance();
     await p.setString(_kDriver, jsonEncode(driver));
+    avisarPerfilMudou();
   }
 
   static Future<void> limpar() async {
@@ -99,5 +103,6 @@ class Sessao {
     await p.remove(_kToken);
     await p.remove(_kRefresh);
     await p.remove(_kDriver);
+    avisarPerfilMudou();
   }
 }

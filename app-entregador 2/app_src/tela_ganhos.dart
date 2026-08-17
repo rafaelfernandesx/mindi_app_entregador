@@ -4,12 +4,13 @@ import 'tema.dart';
 import 'api.dart';
 import 'modelos.dart';
 import 'tela_historico.dart';
+import 'sheet_entrega_feita.dart';
 
 /// altura de uma linha da lista
 const double _alturaLinha = 61;
 
-/// quantas entregas aparecem sem precisar rolar
-const int _entregasVisiveis = 3;
+/// quantas entregas a aba Ganhos mostra (as mais recentes)
+const int _maximoDeEntregas = 10;
 
 class TelaGanhos extends StatefulWidget {
   const TelaGanhos({super.key});
@@ -78,6 +79,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
         _resumo = r[0] as Map<String, dynamic>;
         _entregas = (r[1] as List<Map<String, dynamic>>)
             .map(EntregaFeita.fromJson)
+            .take(_maximoDeEntregas)
             .toList();
         _carregando = false;
       });
@@ -107,12 +109,11 @@ class _TelaGanhosState extends State<TelaGanhos> {
     return Column(
       children: [
         const HeaderVermelho(
-          alturaExtra: 72,
           child: BarraBoasVindas(),
         ),
         Expanded(
           child: Transform.translate(
-            offset: const Offset(0, -52),
+            offset: const Offset(0, -44),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: kSide),
               child: Column(
@@ -210,13 +211,8 @@ class _TelaGanhosState extends State<TelaGanhos> {
               Expanded(
                 child: _carregando
                     ? const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: SizedBox(
-                          width: 26,
-                          height: 26,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2.6, color: T.redDark),
-                        ),
+                        padding: EdgeInsets.symmetric(vertical: 18),
+                        child: Espera(texto: 'Carregando...', tamanho: 17),
                       )
                     : Row(
                         crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -271,14 +267,20 @@ class _TelaGanhosState extends State<TelaGanhos> {
           Row(
             children: [
               _Num(
-                  valor: '${_resumo['totalDeliveries'] ?? _entregas.length}',
+                  valor: _carregando
+                      ? '—'
+                      : '${_resumo['totalDeliveries'] ?? _entregas.length}',
                   label: 'entregas'),
               _Num(
-                  valor: reaisCurto(_n(_resumo['averagePerDelivery'])),
+                  valor: _carregando
+                      ? '—'
+                      : reaisCurto(_n(_resumo['averagePerDelivery'])),
                   label: 'média',
                   divisor: true),
               _Num(
-                  valor: reaisCurto(_n(_resumo['paidAmount'])),
+                  valor: _carregando
+                      ? '—'
+                      : reaisCurto(_n(_resumo['paidAmount'])),
                   label: 'já pago',
                   cor: T.green,
                   divisor: true),
@@ -322,13 +324,15 @@ class _TelaGanhosState extends State<TelaGanhos> {
 
   /* ---------------- lista com rolagem própria ---------------- */
   Widget _lista() {
-    const alturaMax = _alturaLinha * _entregasVisiveis + 12;
+    final alturaMax = _alturaLinha * _entregas.length + 12;
 
     return LayoutBuilder(
       builder: (context, cons) {
         final disponivel =
             cons.maxHeight - 70 - MediaQuery.of(context).padding.bottom;
-        final altura = math.min(alturaMax, math.max(disponivel, 0.0));
+        final altura = _carregando || _entregas.isEmpty
+            ? math.max(math.min(140.0, disponivel), 0.0)
+            : math.min(alturaMax, math.max(disponivel, 0.0));
 
         return Align(
           alignment: Alignment.topCenter,
@@ -343,12 +347,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
               ),
               child: _carregando
                   ? const Center(
-                      child: SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2.4, color: T.redDark),
-                      ),
+                      child: Espera(texto: 'Carregando...', tamanho: 14),
                     )
                   : _erro != null
                       ? Center(
@@ -373,6 +372,8 @@ class _TelaGanhosState extends State<TelaGanhos> {
                               itemBuilder: (context, i) => _LinhaEntrega(
                                 entrega: _entregas[i],
                                 ultima: i == _entregas.length - 1,
+                                aoTocar: () => mostrarEntregaFeita(
+                                    context, _entregas[i]),
                               ),
                             ),
             ),
@@ -387,12 +388,17 @@ class _TelaGanhosState extends State<TelaGanhos> {
 class _LinhaEntrega extends StatelessWidget {
   final EntregaFeita entrega;
   final bool ultima;
-  const _LinhaEntrega({required this.entrega, required this.ultima});
+  final VoidCallback? aoTocar;
+  const _LinhaEntrega(
+      {required this.entrega, required this.ultima, this.aoTocar});
 
   @override
   Widget build(BuildContext context) {
     final e = entrega;
-    return Container(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: aoTocar,
+      child: Container(
       height: _alturaLinha,
       decoration: BoxDecoration(
         border: ultima ? null : const Border(bottom: BorderSide(color: T.line)),
@@ -454,8 +460,12 @@ class _LinhaEntrega extends StatelessWidget {
                           : const Color(0xFF9A6B0F))),
             ],
           ),
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right_rounded,
+              size: 20, color: Color(0xFFC7CAD3)),
         ],
       ),
+        ),
     );
   }
 }

@@ -26,7 +26,8 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
     super.dispose();
   }
 
-  bool get _tamanhoOk => _nova.text.length >= 6;
+  bool get _tamanhoOk =>
+      _nova.text.length >= 6 && _nova.text.length <= 8;
   bool get _numeroOk => _nova.text.contains(RegExp(r'[0-9]'));
   bool get _iguaisOk => _nova.text.isNotEmpty && _nova.text == _confirma.text;
   bool get _podeSalvar =>
@@ -99,6 +100,7 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
                   rotulo: 'Nova senha',
                   controller: _nova,
                   escondido: !_verNova,
+                  maximo: 8,
                   aoVerAlternar: () => setState(() => _verNova = !_verNova),
                   aoMudar: () => setState(() {}),
                 ),
@@ -107,6 +109,7 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
                   rotulo: 'Confirmar nova senha',
                   controller: _confirma,
                   escondido: !_verConfirma,
+                  maximo: 8,
                   aoVerAlternar: () =>
                       setState(() => _verConfirma = !_verConfirma),
                   aoMudar: () => setState(() {}),
@@ -133,7 +136,7 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
                         fontWeight: FontWeight.w700,
                         color: T.ink)),
                 const SizedBox(height: 9),
-                _Regra(texto: 'No mínimo 6 caracteres', ok: _tamanhoOk),
+                _Regra(texto: 'De 6 a 8 caracteres', ok: _tamanhoOk),
                 const SizedBox(height: 6),
                 _Regra(texto: 'Pelo menos 1 número', ok: _numeroOk),
                 const SizedBox(height: 6),
@@ -212,6 +215,7 @@ class _Campo extends StatelessWidget {
   final bool escondido;
   final VoidCallback aoVerAlternar;
   final VoidCallback aoMudar;
+  final int? maximo;
 
   const _Campo({
     required this.rotulo,
@@ -219,6 +223,7 @@ class _Campo extends StatelessWidget {
     required this.escondido,
     required this.aoVerAlternar,
     required this.aoMudar,
+    this.maximo,
   });
 
   @override
@@ -235,10 +240,12 @@ class _Campo extends StatelessWidget {
         TextField(
           controller: controller,
           obscureText: escondido,
+          maxLength: maximo,
           onChanged: (_) => aoMudar(),
           style: const TextStyle(fontSize: 15, color: T.ink),
           decoration: InputDecoration(
             isDense: true,
+            counterText: '', // esconde o "0/8" embaixo do campo
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             filled: true,

@@ -16,6 +16,11 @@ final ganhosHoje = ValueNotifier<double>(0);
 final entregasHoje = ValueNotifier<int>(0);
 final mediaHoje = ValueNotifier<double>(0);
 
+/// Sobe +1 sempre que os dados do entregador mudam (nome, e-mail...).
+/// Quem mostra o nome na tela "ouve" isso e se redesenha na hora.
+final versaoDoPerfil = ValueNotifier<int>(0);
+void avisarPerfilMudou() => versaoDoPerfil.value = versaoDoPerfil.value + 1;
+
 /// Id do pedido que veio de uma notificação tocada pelo entregador.
 /// A tela Início "ouve" isso e abre o pedido sozinha.
 final pedidoDaNotificacao = ValueNotifier<int?>(null);

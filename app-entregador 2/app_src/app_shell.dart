@@ -47,7 +47,8 @@ class _AppShellState extends State<AppShell> {
           Positioned(
             left: kSide,
             right: kSide,
-            bottom: margemInferior,
+            // + 8 só para a barra não encostar na barra do Android
+            bottom: margemInferior + 8,
             child: ValueListenableBuilder<int>(
               valueListenable: abaSelecionada,
               builder: (_, aba, __) => TabBarCurva(

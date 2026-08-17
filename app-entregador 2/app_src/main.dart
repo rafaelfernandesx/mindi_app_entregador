@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'tema.dart';
 import 'sessao.dart';
@@ -9,6 +10,15 @@ import 'app_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Tira a faixa cinza que o Android desenha por cima do conteudo
+  // na altura da barra de navegacao (aquela sombra fraquinha embaixo).
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+    systemNavigationBarContrastEnforced: false,
+    systemNavigationBarIconBrightness: Brightness.dark,
+  ));
 
   // lê o login salvo no celular antes de abrir a primeira tela
   await Sessao.carregar();

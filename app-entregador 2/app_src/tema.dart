@@ -100,6 +100,14 @@ class BarraBoasVindas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // se redesenha sozinho quando o entregador troca o nome no perfil
+    return ListenableBuilder(
+      listenable: versaoDoPerfil,
+      builder: (context, _) => _conteudo(context),
+    );
+  }
+
+  Widget _conteudo(BuildContext context) {
     final nome = Sessao.nome.isNotEmpty ? Sessao.nome : 'Entregador';
 
     return ValueListenableBuilder<bool>(
@@ -285,38 +293,82 @@ class TelaInterna extends StatelessWidget {
       ],
     );
 
+    // Com o teclado aberto sobra pouca tela. Nessa hora o header vermelho
+    // sai de cena para o formulário caber inteiro.
+    final tecladoAberto = MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Scaffold(
       backgroundColor: T.bg,
+      // o Scaffold já encolhe o corpo na altura do teclado,
+      // por isso NÃO somamos viewInsets no padding (senão conta duas vezes)
+      resizeToAvoidBottomInset: true,
       body: Column(
         children: [
-          const HeaderVermelho(
-            alturaExtra: 40,
-            child: BarraBoasVindas(clicavel: false),
-          ),
+          if (tecladoAberto)
+            SizedBox(height: MediaQuery.of(context).padding.top)
+          else
+            const HeaderVermelho(
+              child: BarraBoasVindas(clicavel: false),
+            ),
           Expanded(
             child: Transform.translate(
-              offset: const Offset(0, -26),
+              offset: Offset(0, tecladoAberto ? 0 : -44),
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: T.bg,
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(tecladoAberto ? 0 : 28)),
                 ),
                 padding: EdgeInsets.fromLTRB(
                     kSide,
-                    22,
+                    tecladoAberto ? 10 : 22,
                     kSide,
-                    26 +
-                        MediaQuery.of(context).padding.bottom +
-                        MediaQuery.of(context).viewInsets.bottom),
+                    18 + MediaQuery.of(context).padding.bottom),
                 child: rolavel
-                    ? SingleChildScrollView(child: conteudo)
+                    ? SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        child: conteudo,
+                      )
                     : conteudo,
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/* ---------- spinner de carregando (mesmo visual da aba Início) ---------- */
+class Espera extends StatelessWidget {
+  final String texto;
+  final double tamanho;
+  const Espera({super.key, this.texto = 'Carregando...', this.tamanho = 15});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: tamanho,
+          height: tamanho,
+          child: const CircularProgressIndicator(
+              strokeWidth: 2.6, color: T.redDark),
+        ),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Text(texto,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: tamanho,
+                  fontWeight: FontWeight.w800,
+                  color: T.ink,
+                  letterSpacing: -.3)),
+        ),
+      ],
     );
   }
 }

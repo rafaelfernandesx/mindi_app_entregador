@@ -26,12 +26,19 @@ class _TelaPerfilState extends State<TelaPerfil> {
     _carregar();
     // recarrega sempre que o entregador volta para a aba Perfil
     abaSelecionada.addListener(_aoTrocarAba);
+    // redesenha assim que o nome/e-mail muda em "Meus dados"
+    versaoDoPerfil.addListener(_aoMudarPerfil);
   }
 
   @override
   void dispose() {
     abaSelecionada.removeListener(_aoTrocarAba);
+    versaoDoPerfil.removeListener(_aoMudarPerfil);
     super.dispose();
+  }
+
+  void _aoMudarPerfil() {
+    if (mounted) setState(() {});
   }
 
   void _aoTrocarAba() {
@@ -113,11 +120,12 @@ class _TelaPerfilState extends State<TelaPerfil> {
           children: [
             // faixa vermelha sem texto — o cartão sobe por cima dela
             const HeaderVermelho(
-              alturaExtra: 54,
-              child: SizedBox(height: 46, width: double.infinity),
+              // mesmo header da aba Início: nome + botão Online/Offline
+              // (não é clicável aqui, o entregador já está no perfil)
+              child: BarraBoasVindas(clicavel: false),
             ),
             Transform.translate(
-              offset: const Offset(0, -30),
+              offset: const Offset(0, -44),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: kSide),
                 child: Column(
