@@ -134,15 +134,17 @@ class _SheetDetalhes extends StatelessWidget {
                             _BotaoContato(
                               icone: Icons.map_outlined,
                               texto: 'Abrir rota',
-                              onTap: () => _aviso(context,
-                                  p.mapsUrl ?? 'Rota indisponível para este pedido'),
+                              onTap: () => abrirLink(context, p.mapsUrl),
                             ),
                             const SizedBox(width: 8),
                             _BotaoContato(
                               icone: Icons.phone_outlined,
                               texto: 'Ligar',
-                              onTap: () => _aviso(
-                                  context, p.telefone ?? 'Telefone não informado'),
+                              onTap: () => abrirLink(
+                                  context,
+                                  p.telefone == null
+                                      ? null
+                                      : 'tel:${p.telefone!.replaceAll(RegExp(r'\D'), '')}'),
                             ),
                             const SizedBox(width: 8),
                             _BotaoContato(

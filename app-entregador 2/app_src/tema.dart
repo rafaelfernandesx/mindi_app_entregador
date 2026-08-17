@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'estado.dart';
 import 'sessao.dart';
 import 'api.dart';
@@ -197,6 +198,41 @@ class BarraBoasVindas extends StatelessWidget {
   }
 }
 
+/* ---------- abre link fora do app (Maps, telefone, WhatsApp) ---------- */
+Future<void> abrirLink(BuildContext context, String? url) async {
+  if (url == null || url.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Link indisponível'),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: T.dark2,
+    ));
+    return;
+  }
+  try {
+    final ok = await launchUrl(Uri.parse(url.trim()),
+        mode: LaunchMode.externalApplication);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Nenhum aplicativo encontrado para abrir isso'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: T.dark2,
+      ));
+    }
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Não foi possível abrir'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: T.dark2,
+      ));
+    }
+  }
+}
+
+/// abre o WhatsApp do suporte
+Future<void> abrirSuporte(BuildContext context) => abrirLink(context,
+    'https://api.whatsapp.com/send/?phone=5534998807793&text=Ol%C3%A1%2C+queria+tirar+uma+duvida%2C+pode+me+ajudar%3F&type=phone_number&app_absent=0');
+
 /* ================================================================== *
  *  TELA INTERNA — usada pelas telas abertas a partir do Perfil
  *  (faixa vermelha em cima + painel branco com botão voltar e título)
@@ -267,7 +303,12 @@ class TelaInterna extends StatelessWidget {
                       BorderRadius.vertical(top: Radius.circular(28)),
                 ),
                 padding: EdgeInsets.fromLTRB(
-                    kSide, 22, kSide, 26 + MediaQuery.of(context).padding.bottom),
+                    kSide,
+                    22,
+                    kSide,
+                    26 +
+                        MediaQuery.of(context).padding.bottom +
+                        MediaQuery.of(context).viewInsets.bottom),
                 child: rolavel
                     ? SingleChildScrollView(child: conteudo)
                     : conteudo,

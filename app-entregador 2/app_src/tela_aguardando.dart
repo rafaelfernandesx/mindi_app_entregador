@@ -364,6 +364,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
               valueListenable: entregadorAtivo,
               builder: (context, ativo, _) => Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Radar(ativo: ativo, tamanho: 168, nucleo: 68, icone: 31),
                   const SizedBox(height: 18),
@@ -402,6 +403,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
     return ValueListenableBuilder<bool>(
       valueListenable: entregadorAtivo,
       builder: (context, ativo, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (_erro != null) ...[
             _CaixaErro(texto: _erro!, onTentar: _atualizar),
@@ -725,7 +727,7 @@ class _TituloEspera extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (comSpinner) ...[
@@ -739,6 +741,7 @@ class _TituloEspera extends StatelessWidget {
         ],
         Flexible(
           child: Text(texto,
+              textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: tamanho,
                   fontWeight: FontWeight.w800,

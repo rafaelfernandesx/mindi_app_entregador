@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'tema.dart';
 import 'api.dart';
 import 'sessao.dart';
+import 'estado.dart';
 import 'tela_historico.dart';
 import 'tela_trocar_senha.dart';
 import 'tela_login.dart';
@@ -21,6 +22,18 @@ class _TelaPerfilState extends State<TelaPerfil> {
   void initState() {
     super.initState();
     _carregar();
+    // recarrega sempre que o entregador volta para a aba Perfil
+    abaSelecionada.addListener(_aoTrocarAba);
+  }
+
+  @override
+  void dispose() {
+    abaSelecionada.removeListener(_aoTrocarAba);
+    super.dispose();
+  }
+
+  void _aoTrocarAba() {
+    if (abaSelecionada.value == 2 && mounted) _carregar();
   }
 
   /// busca os dados do entregador na API
@@ -255,7 +268,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
                         fundo: const Color(0xFFF3EEFD),
                         titulo: 'Ajuda e suporte',
                         sub: 'Fale com a gente pelo WhatsApp',
-                        onTap: () {},
+                        onTap: () => abrirSuporte(context),
                       ),
                       _Item(
                         icone: Icons.logout_rounded,
