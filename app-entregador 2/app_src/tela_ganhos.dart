@@ -1,34 +1,15 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'api.dart';
+import 'modelos.dart';
 import 'tela_historico.dart';
 
-/* ---- dados de exemplo: troque pelos dados da sua API ---- */
-class Entrega {
-  final String id, rua, bairro, km, hora;
-  final int valor;
-  const Entrega(this.id, this.rua, this.bairro, this.km, this.valor, this.hora);
-}
-
-const _entregas = [
-  Entrega('P1042', 'Rua Padre Valdevino', 'Aldeota', '3,4', 12, '16:24'),
-  Entrega('P1041', 'Av. Dom Luís', 'Meireles', '5,1', 15, '15:47'),
-  Entrega('P1040', 'Rua Silva Jatahy', 'Centro', '1,8', 9, '14:58'),
-  Entrega('P1039', 'Av. Santos Dumont', 'Aldeota', '4,0', 13, '14:12'),
-];
-
-/// altura de uma linha da lista (ícone 38 + 11 de padding em cima e embaixo)
+/// altura de uma linha da lista
 const double _alturaLinha = 61;
 
 /// quantas entregas aparecem sem precisar rolar
 const int _entregasVisiveis = 3;
-
-/// título do card conforme o período escolhido
-const _rotulo = {
-  'Hoje': 'GANHOS DE HOJE',
-  'Semana': 'GANHOS DA SEMANA',
-  'Mês': 'GANHOS DO MÊS',
-};
 
 class TelaGanhos extends StatefulWidget {
   const TelaGanhos({super.key});
@@ -40,9 +21,89 @@ class TelaGanhos extends StatefulWidget {
 class _TelaGanhosState extends State<TelaGanhos> {
   String _periodo = 'Hoje';
 
+  Map<String, dynamic> _resumo = {};
+  List<EntregaFeita> _entregas = [];
+  bool _carregando = true;
+  String? _erro;
+
+  @override
+  void initState() {
+    super.initState();
+    _buscar();
+  }
+
+  /* ---------------- período escolhido ---------------- */
+  (DateTime, DateTime) get _intervalo {
+    final hoje = DateTime.now();
+    switch (_periodo) {
+      case 'Semana':
+        return (hoje.subtract(Duration(days: hoje.weekday - 1)), hoje);
+      case 'Mês':
+        return (DateTime(hoje.year, hoje.month, 1), hoje);
+      default:
+        return (hoje, hoje);
+    }
+  }
+
+  String get _rotulo {
+    switch (_periodo) {
+      case 'Semana':
+        return 'GANHOS DA SEMANA';
+      case 'Mês':
+        return 'GANHOS DO MÊS';
+      default:
+        return 'GANHOS DE HOJE';
+    }
+  }
+
+  /* ---------------- API ---------------- */
+  Future<void> _buscar() async {
+    if (!apiConfigurada) {
+      setState(() => _carregando = false);
+      return;
+    }
+    setState(() {
+      _carregando = true;
+      _erro = null;
+    });
+
+    final (de, ate) = _intervalo;
+    try {
+      final r = await Future.wait([
+        Api.ganhos(de: de, ate: ate),
+        Api.historico(de: de, ate: ate),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _resumo = r[0] as Map<String, dynamic>;
+        _entregas = (r[1] as List<Map<String, dynamic>>)
+            .map(EntregaFeita.fromJson)
+            .toList();
+        _carregando = false;
+      });
+    } on ApiErro catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _erro = e.mensagem;
+        _carregando = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _erro = 'Não foi possível carregar os ganhos.';
+        _carregando = false;
+      });
+    }
+  }
+
+  double _n(dynamic v) {
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v.replaceAll(',', '.')) ?? 0;
+    return 0;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // a página NÃO rola: é uma Column fixa. Só a lista de entregas rola.
     return Column(
       children: [
         const HeaderVermelho(
@@ -61,7 +122,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
                   const SizedBox(height: 18),
                   _tituloSecao(),
                   const SizedBox(height: 9),
-                  Expanded(child: _listaEntregas()),
+                  Expanded(child: _lista()),
                 ],
               ),
             ),
@@ -71,8 +132,12 @@ class _TelaGanhosState extends State<TelaGanhos> {
     );
   }
 
-  /* ---------------- cartão escuro ---------------- */
+  /* ---------------- cartão claro ---------------- */
   Widget _cartaoGanhos() {
+    final total = _n(_resumo['totalEarnings']);
+    final aReceber = _n(_resumo['pendingPayment']);
+    final partes = total.toStringAsFixed(2).split('.');
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -96,7 +161,10 @@ class _TelaGanhosState extends State<TelaGanhos> {
                 return Expanded(
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => setState(() => _periodo = p),
+                    onTap: () {
+                      setState(() => _periodo = p);
+                      _buscar();
+                    },
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 7),
                       alignment: Alignment.center,
@@ -127,7 +195,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
           ),
           const SizedBox(height: 16),
 
-          Text(_rotulo[_periodo]!,
+          Text(_rotulo,
               style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -135,53 +203,64 @@ class _TelaGanhosState extends State<TelaGanhos> {
                   color: Color(0xFF9CA1AE))),
           const SizedBox(height: 2),
 
-          // valor à esquerda, variação à direita
+          // valor + "a receber"
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    const Text('R\$ ',
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: T.inkSoft)),
-                    const Text('96,00',
-                        style: TextStyle(
-                            fontSize: 35,
-                            fontWeight: FontWeight.w800,
-                            color: T.ink,
-                            letterSpacing: -1)),
-                  ],
-                ),
+                child: _carregando
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: SizedBox(
+                          width: 26,
+                          height: 26,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2.6, color: T.redDark),
+                        ),
+                      )
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          const Text('R\$ ',
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: T.inkSoft)),
+                          Text('${partes[0]},${partes[1]}',
+                              style: const TextStyle(
+                                  fontSize: 35,
+                                  fontWeight: FontWeight.w800,
+                                  color: T.ink,
+                                  letterSpacing: -1)),
+                        ],
+                      ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F7EE),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.trending_up_rounded,
-                          size: 13, color: T.green),
-                      SizedBox(width: 5),
-                      Text('12% vs. ontem',
-                          style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: T.green)),
-                    ],
+              if (aReceber > 0)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF6D6),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.schedule_rounded,
+                            size: 13, color: Color(0xFF9A6B0F)),
+                        const SizedBox(width: 5),
+                        Text('${reaisCurto(aReceber)} a receber',
+                            style: const TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF9A6B0F))),
+                      ],
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -189,11 +268,20 @@ class _TelaGanhosState extends State<TelaGanhos> {
           const Divider(color: T.line, height: 1),
           const SizedBox(height: 13),
 
-          const Row(
+          Row(
             children: [
-              _Num(valor: '8', label: 'entregas'),
-              _Num(valor: '34 km', label: 'rodados', divisor: true),
-              _Num(valor: 'R\$ 12', label: 'média', divisor: true),
+              _Num(
+                  valor: '${_resumo['totalDeliveries'] ?? _entregas.length}',
+                  label: 'entregas'),
+              _Num(
+                  valor: reaisCurto(_n(_resumo['averagePerDelivery'])),
+                  label: 'média',
+                  divisor: true),
+              _Num(
+                  valor: reaisCurto(_n(_resumo['paidAmount'])),
+                  label: 'já pago',
+                  cor: T.green,
+                  divisor: true),
             ],
           ),
         ],
@@ -208,8 +296,11 @@ class _TelaGanhosState extends State<TelaGanhos> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('ENTREGAS DE HOJE',
-              style: TextStyle(
+          Text(
+              _periodo == 'Hoje'
+                  ? 'ENTREGAS DE HOJE'
+                  : 'ENTREGAS DO PERÍODO',
+              style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1,
@@ -230,13 +321,11 @@ class _TelaGanhosState extends State<TelaGanhos> {
   }
 
   /* ---------------- lista com rolagem própria ---------------- */
-  Widget _listaEntregas() {
-    // mostra no máximo 3 entregas; o resto rola DENTRO do card
+  Widget _lista() {
     const alturaMax = _alturaLinha * _entregasVisiveis + 12;
 
     return LayoutBuilder(
       builder: (context, cons) {
-        // 70 = espaço da tab bar flutuante + a barra do Android
         final disponivel =
             cons.maxHeight - 70 - MediaQuery.of(context).padding.bottom;
         final altura = math.min(alturaMax, math.max(disponivel, 0.0));
@@ -252,15 +341,40 @@ class _TelaGanhosState extends State<TelaGanhos> {
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: sombraCard(),
               ),
-              child: ListView.builder(
-                padding: EdgeInsets.zero,
-                physics: const BouncingScrollPhysics(),
-                itemCount: _entregas.length,
-                itemBuilder: (context, i) => _LinhaEntrega(
-                  entrega: _entregas[i],
-                  ultima: i == _entregas.length - 1,
-                ),
-              ),
+              child: _carregando
+                  ? const Center(
+                      child: SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2.4, color: T.redDark),
+                      ),
+                    )
+                  : _erro != null
+                      ? Center(
+                          child: GestureDetector(
+                            onTap: _buscar,
+                            child: Text(_erro!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    fontSize: 12.5, color: T.inkSoft)),
+                          ),
+                        )
+                      : _entregas.isEmpty
+                          ? const Center(
+                              child: Text('Nenhuma entrega nesse período',
+                                  style: TextStyle(
+                                      fontSize: 13, color: T.inkSoft)),
+                            )
+                          : ListView.builder(
+                              padding: EdgeInsets.zero,
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: _entregas.length,
+                              itemBuilder: (context, i) => _LinhaEntrega(
+                                entrega: _entregas[i],
+                                ultima: i == _entregas.length - 1,
+                              ),
+                            ),
             ),
           ),
         );
@@ -271,7 +385,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
 
 /* ---------------- uma linha da lista ---------------- */
 class _LinhaEntrega extends StatelessWidget {
-  final Entrega entrega;
+  final EntregaFeita entrega;
   final bool ultima;
   const _LinhaEntrega({required this.entrega, required this.ultima});
 
@@ -302,7 +416,7 @@ class _LinhaEntrega extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(e.rua,
+                Text(e.endereco.isEmpty ? e.cliente : e.endereco,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -311,7 +425,13 @@ class _LinhaEntrega extends StatelessWidget {
                         color: T.ink,
                         letterSpacing: -.2)),
                 const SizedBox(height: 2),
-                Text('${e.bairro} · ${e.km} km · #${e.id}',
+                Text(
+                    [
+                      if (e.cliente.isNotEmpty) e.cliente,
+                      e.numero,
+                    ].join(' · '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 12, color: T.inkSoft)),
               ],
             ),
@@ -320,15 +440,18 @@ class _LinhaEntrega extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('R\$ ${e.valor}',
+              Text(reaisCurto(e.valor),
                   style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                       color: T.green)),
               const SizedBox(height: 2),
-              Text(e.hora,
-                  style:
-                      const TextStyle(fontSize: 11, color: Color(0xFFA0A5B1))),
+              Text(e.pago ? e.hora : 'a receber',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: e.pago
+                          ? const Color(0xFFA0A5B1)
+                          : const Color(0xFF9A6B0F))),
             ],
           ),
         ],
@@ -340,7 +463,12 @@ class _LinhaEntrega extends StatelessWidget {
 class _Num extends StatelessWidget {
   final String valor, label;
   final bool divisor;
-  const _Num({required this.valor, required this.label, this.divisor = false});
+  final Color? cor;
+  const _Num(
+      {required this.valor,
+      required this.label,
+      this.divisor = false,
+      this.cor});
 
   @override
   Widget build(BuildContext context) {
@@ -358,10 +486,12 @@ class _Num extends StatelessWidget {
           Column(
             children: [
               Text(valor,
-                  style: const TextStyle(
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
-                      color: T.ink,
+                      color: cor ?? T.ink,
                       letterSpacing: -.3)),
               Text(label,
                   style: const TextStyle(fontSize: 11, color: T.inkSoft)),
