@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'tela_historico.dart';
+import 'tela_trocar_senha.dart';
+import 'tela_login.dart';
 
 /* ---- dados de exemplo: troque pelos dados da sua API ---- */
 const _usuario = {
@@ -20,20 +23,17 @@ class TelaPerfil extends StatefulWidget {
 }
 
 class _TelaPerfilState extends State<TelaPerfil> {
-  bool _ativo = true;
-
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 130),
+      padding: EdgeInsets.only(
+          bottom: 130 + MediaQuery.of(context).padding.bottom),
       child: Column(
         children: [
-          HeaderVermelho(
+          // faixa vermelha sem texto — o cartão do perfil sobe por cima dela
+          const HeaderVermelho(
             alturaExtra: 54,
-            child: BarraBoasVindas(
-              ativo: _ativo,
-              onToggle: () => setState(() => _ativo = !_ativo),
-            ),
+            child: SizedBox(height: 46, width: double.infinity),
           ),
           Transform.translate(
             offset: const Offset(0, -40),
@@ -150,7 +150,8 @@ class _TelaPerfilState extends State<TelaPerfil> {
                       fundo: const Color(0xFFFDECEC),
                       titulo: 'Trocar minha senha',
                       sub: 'Alterada há 3 meses',
-                      onTap: () {},
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => const TelaTrocarSenha())),
                     ),
                     _Item(
                       icone: Icons.access_time_rounded,
@@ -158,7 +159,8 @@ class _TelaPerfilState extends State<TelaPerfil> {
                       fundo: const Color(0xFFEAF1FE),
                       titulo: 'Histórico de entregas',
                       sub: '${_usuario['entregas']} entregas concluídas',
-                      onTap: () {},
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => const TelaHistorico())),
                     ),
                   ]),
 
@@ -179,7 +181,9 @@ class _TelaPerfilState extends State<TelaPerfil> {
                       fundo: const Color(0xFFFDECEC),
                       titulo: 'Sair da conta',
                       perigo: true,
-                      onTap: () {},
+                      onTap: () => Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => const TelaLogin()),
+                          (rota) => false),
                     ),
                   ]),
 

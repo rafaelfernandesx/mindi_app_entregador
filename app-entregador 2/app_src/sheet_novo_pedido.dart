@@ -1,0 +1,216 @@
+import 'package:flutter/material.dart';
+import 'tema.dart';
+import 'modelos.dart';
+
+/* ================================================================== *
+ *  MODAL DE NOVO PEDIDO
+ *  Abre de baixo pra cima, com o fundo escurecido.
+ *  Devolve true se o entregador aceitou.
+ * ================================================================== */
+Future<bool?> mostrarNovoPedido(BuildContext context, Pedido pedido) {
+  return showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withOpacity(.55), // overlay opaco
+    builder: (_) => _SheetNovoPedido(pedido: pedido),
+  );
+}
+
+class _SheetNovoPedido extends StatelessWidget {
+  final Pedido pedido;
+  const _SheetNovoPedido({required this.pedido});
+
+  @override
+  Widget build(BuildContext context) {
+    final margemInferior = MediaQuery.of(context).padding.bottom;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(18, 10, 18, 18 + margemInferior),
+      decoration: const BoxDecoration(
+        color: T.card,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // pegador
+          Container(
+            width: 42,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE2E4EA),
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+
+          // título + valor
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDECEC),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Icon(Icons.receipt_long_rounded,
+                    size: 22, color: T.redDark),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Novo pedido!',
+                        style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            color: T.ink,
+                            letterSpacing: -.4)),
+                    Text('Pedido #${pedido.id}',
+                        style: const TextStyle(
+                            fontSize: 13, color: T.inkSoft)),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F7EE),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(pedido.valorFormatado,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: T.green)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // endereço
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF7F8FA),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFEDEEF2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.location_on_outlined, size: 17, color: T.green),
+                    SizedBox(width: 7),
+                    Text('Entrega',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: T.ink)),
+                  ],
+                ),
+                const SizedBox(height: 7),
+                Text('${pedido.endereco} — ${pedido.bairro}',
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF4A4F5C))),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // 3 caixinhas
+          Row(
+            children: [
+              _Caixa(rotulo: 'Distância', valor: '${pedido.km} km'),
+              const SizedBox(width: 10),
+              _Caixa(rotulo: 'Itens', valor: '${pedido.itens} itens'),
+              const SizedBox(width: 10),
+              _Caixa(rotulo: 'Pagamento', valor: pedido.pagamento),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // botão aceitar
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(true),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 17),
+              decoration: BoxDecoration(
+                gradient: kGradRed,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: T.redDark.withOpacity(.34),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Aceitar entrega',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white)),
+                  SizedBox(width: 9),
+                  Icon(Icons.check_rounded, size: 20, color: Colors.white),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Agora não',
+                style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: T.inkSoft)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Caixa extends StatelessWidget {
+  final String rotulo, valor;
+  const _Caixa({required this.rotulo, required this.valor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F8FA),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFEDEEF2)),
+        ),
+        child: Column(
+          children: [
+            Text(rotulo,
+                style: const TextStyle(fontSize: 11.5, color: T.inkSoft)),
+            const SizedBox(height: 2),
+            Text(valor,
+                style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: T.ink,
+                    letterSpacing: -.3)),
+          ],
+        ),
+      ),
+    );
+  }
+}

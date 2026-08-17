@@ -1,0 +1,283 @@
+import 'package:flutter/material.dart';
+import 'tema.dart';
+
+class TelaTrocarSenha extends StatefulWidget {
+  const TelaTrocarSenha({super.key});
+
+  @override
+  State<TelaTrocarSenha> createState() => _TelaTrocarSenhaState();
+}
+
+class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
+  final _atual = TextEditingController();
+  final _nova = TextEditingController();
+  final _confirma = TextEditingController();
+
+  bool _verAtual = false, _verNova = false, _verConfirma = false;
+  bool _salvando = false;
+  String? _erro;
+
+  @override
+  void dispose() {
+    _atual.dispose();
+    _nova.dispose();
+    _confirma.dispose();
+    super.dispose();
+  }
+
+  bool get _tamanhoOk => _nova.text.length >= 6;
+  bool get _numeroOk => _nova.text.contains(RegExp(r'[0-9]'));
+  bool get _iguaisOk => _nova.text.isNotEmpty && _nova.text == _confirma.text;
+  bool get _podeSalvar =>
+      _atual.text.isNotEmpty && _tamanhoOk && _numeroOk && _iguaisOk;
+
+  Future<void> _salvar() async {
+    setState(() {
+      _erro = null;
+      _salvando = true;
+    });
+
+    // ---- aqui você chama a sua API para trocar a senha ----
+    await Future.delayed(const Duration(milliseconds: 900));
+
+    if (!mounted) return;
+    setState(() => _salvando = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Senha alterada com sucesso'),
+        backgroundColor: T.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    Navigator.of(context).maybePop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TelaInterna(
+      titulo: 'Trocar minha senha',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: T.card,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: sombraCard(),
+            ),
+            child: Column(
+              children: [
+                _Campo(
+                  rotulo: 'Senha atual',
+                  controller: _atual,
+                  escondido: !_verAtual,
+                  aoVerAlternar: () => setState(() => _verAtual = !_verAtual),
+                  aoMudar: () => setState(() {}),
+                ),
+                const SizedBox(height: 14),
+                _Campo(
+                  rotulo: 'Nova senha',
+                  controller: _nova,
+                  escondido: !_verNova,
+                  aoVerAlternar: () => setState(() => _verNova = !_verNova),
+                  aoMudar: () => setState(() {}),
+                ),
+                const SizedBox(height: 14),
+                _Campo(
+                  rotulo: 'Confirmar nova senha',
+                  controller: _confirma,
+                  escondido: !_verConfirma,
+                  aoVerAlternar: () =>
+                      setState(() => _verConfirma = !_verConfirma),
+                  aoMudar: () => setState(() {}),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ---------- regras ----------
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF7F8FA),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFEDEEF2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('A nova senha precisa ter:',
+                    style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: T.ink)),
+                const SizedBox(height: 9),
+                _Regra(texto: 'No mínimo 6 caracteres', ok: _tamanhoOk),
+                const SizedBox(height: 6),
+                _Regra(texto: 'Pelo menos 1 número', ok: _numeroOk),
+                const SizedBox(height: 6),
+                _Regra(texto: 'As duas senhas devem ser iguais', ok: _iguaisOk),
+              ],
+            ),
+          ),
+
+          if (_erro != null) ...[
+            const SizedBox(height: 12),
+            Text(_erro!,
+                style: const TextStyle(fontSize: 12.5, color: T.redDark)),
+          ],
+
+          const SizedBox(height: 20),
+
+          // ---------- botão salvar ----------
+          GestureDetector(
+            onTap: _podeSalvar && !_salvando ? _salvar : null,
+            child: Opacity(
+              opacity: _podeSalvar && !_salvando ? 1 : .45,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: kGradRed,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: _podeSalvar
+                      ? [
+                          BoxShadow(
+                            color: T.redDark.withOpacity(.3),
+                            blurRadius: 14,
+                            offset: const Offset(0, 7),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Center(
+                  child: _salvando
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2.4, color: Colors.white),
+                        )
+                      : const Text('Salvar nova senha',
+                          style: TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white)),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: const Text('Cancelar',
+                  style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: T.inkSoft)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/* ---------------- campo de senha ---------------- */
+class _Campo extends StatelessWidget {
+  final String rotulo;
+  final TextEditingController controller;
+  final bool escondido;
+  final VoidCallback aoVerAlternar;
+  final VoidCallback aoMudar;
+
+  const _Campo({
+    required this.rotulo,
+    required this.controller,
+    required this.escondido,
+    required this.aoVerAlternar,
+    required this.aoMudar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(rotulo,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF6B7180))),
+        const SizedBox(height: 7),
+        TextField(
+          controller: controller,
+          obscureText: escondido,
+          onChanged: (_) => aoMudar(),
+          style: const TextStyle(fontSize: 15, color: T.ink),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            filled: true,
+            fillColor: const Color(0xFFF7F8FA),
+            hintText: '••••••',
+            hintStyle: const TextStyle(color: Color(0xFFB9BCC6)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFE7E9EE)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFE7E9EE)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: T.redDark, width: 1.5),
+            ),
+            suffixIcon: IconButton(
+              onPressed: aoVerAlternar,
+              icon: Icon(
+                escondido
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
+                size: 20,
+                color: T.inkSoft,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/* ---------------- linha de regra ---------------- */
+class _Regra extends StatelessWidget {
+  final String texto;
+  final bool ok;
+  const _Regra({required this.texto, required this.ok});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          ok ? Icons.check_circle_rounded : Icons.circle_outlined,
+          size: 16,
+          color: ok ? T.green : const Color(0xFFC6CAD3),
+        ),
+        const SizedBox(width: 8),
+        Text(texto,
+            style: TextStyle(
+                fontSize: 12.5,
+                color: ok ? T.ink : T.inkSoft,
+                fontWeight: ok ? FontWeight.w600 : FontWeight.w500)),
+      ],
+    );
+  }
+}

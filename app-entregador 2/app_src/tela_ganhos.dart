@@ -41,19 +41,15 @@ class TelaGanhos extends StatefulWidget {
 
 class _TelaGanhosState extends State<TelaGanhos> {
   String _periodo = 'Hoje';
-  bool _ativo = true;
 
   @override
   Widget build(BuildContext context) {
     // a página NÃO rola: é uma Column fixa. Só a lista de entregas rola.
     return Column(
       children: [
-        HeaderVermelho(
+        const HeaderVermelho(
           alturaExtra: 72,
-          child: BarraBoasVindas(
-            ativo: _ativo,
-            onToggle: () => setState(() => _ativo = !_ativo),
-          ),
+          child: BarraBoasVindas(),
         ),
         Expanded(
           child: Transform.translate(
@@ -276,8 +272,9 @@ class _TelaGanhosState extends State<TelaGanhos> {
 
     return LayoutBuilder(
       builder: (context, cons) {
-        // 70 = espaço reservado embaixo para a tab bar flutuante
-        final disponivel = cons.maxHeight - 70;
+        // 70 = espaço da tab bar flutuante + a barra do Android
+        final disponivel =
+            cons.maxHeight - 70 - MediaQuery.of(context).padding.bottom;
         final altura = math.min(alturaMax, math.max(disponivel, 0.0));
 
         return Align(
