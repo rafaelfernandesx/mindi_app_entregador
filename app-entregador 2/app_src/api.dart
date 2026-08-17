@@ -11,7 +11,7 @@ import 'sessao.dart';
  *  Enquanto estiver vazio, o app funciona em MODO DEMONSTRAÇÃO
  *  (dados de exemplo, sem internet).
  * ================================================================== */
-const String kApiBase = 'https://dev.mindi.com.br/api/driver';
+const String kApiBase = 'https://dev.mindi.com.br';
 
 bool get apiConfigurada => kApiBase.trim().isNotEmpty;
 
