@@ -16,9 +16,6 @@ const _entregas = [
   Entrega('P1039', 'Av. Santos Dumont', 'Aldeota', '4,0', 13, '14:12'),
 ];
 
-const _ganho = 96;
-const _meta = 150;
-
 /// altura de uma linha da lista (ícone 38 + 11 de padding em cima e embaixo)
 const double _alturaLinha = 61;
 
@@ -187,42 +184,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
               ),
             ],
           ),
-          const SizedBox(height: 14),
-
-          // meta do dia (sem a porcentagem)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Meta do dia',
-                  style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withOpacity(.6))),
-              Text.rich(
-                TextSpan(children: [
-                  const TextSpan(
-                      text: 'R\$ $_ganho',
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w700)),
-                  TextSpan(
-                      text: ' / R\$ $_meta',
-                      style: TextStyle(color: Colors.white.withOpacity(.6))),
-                ]),
-                style: const TextStyle(fontSize: 11.5),
-              ),
-            ],
-          ),
-          const SizedBox(height: 7),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: _ganho / _meta,
-              minHeight: 6,
-              backgroundColor: Colors.white.withOpacity(.12),
-              valueColor: const AlwaysStoppedAnimation(T.greenLight),
-            ),
-          ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
 
           Divider(color: Colors.white.withOpacity(.09), height: 1),
           const SizedBox(height: 13),

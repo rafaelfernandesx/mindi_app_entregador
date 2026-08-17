@@ -13,87 +13,101 @@ class TelaLogin extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: T.card,
+      // centraliza quando cabe, rola quando a tela é pequena — assim o
+      // botão nunca fica fora da área que aceita toque
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-          child: Column(
-            children: [
-              // ---------- ilustração ----------
-              const Expanded(child: Center(child: _Ilustracao())),
+        child: LayoutBuilder(
+          builder: (context, cons) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: cons.maxHeight),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const _Ilustracao(),
+                    const SizedBox(height: 34),
 
-              const Text('Bora rodar?',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w800,
-                      color: T.ink,
-                      letterSpacing: -.8)),
-              const SizedBox(height: 10),
-              const Text(
-                'Receba pedidos e acompanhe suas\nentregas em tempo real.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, color: T.inkSoft, height: 1.45),
-              ),
-              const SizedBox(height: 28),
+                    const Text('Bora rodar?',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w800,
+                            color: T.ink,
+                            letterSpacing: -.8)),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Receba pedidos e acompanhe suas\nentregas em tempo real.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 15, color: T.inkSoft, height: 1.45),
+                    ),
+                    const SizedBox(height: 28),
 
-              // ---------- botão principal ----------
-              GestureDetector(
-                onTap: () => _abrirLogin(context),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  decoration: BoxDecoration(
-                    gradient: kGradRed,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: T.redDark.withOpacity(.3),
-                        blurRadius: 18,
-                        offset: const Offset(0, 9),
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Entrar na conta',
-                          style: TextStyle(
-                              fontSize: 16.5,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white)),
-                      SizedBox(width: 8),
-                      Icon(Icons.chevron_right_rounded,
-                          size: 22, color: Colors.white),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-
-              // ---------- rodapé ----------
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Não tem conta? ',
-                      style: TextStyle(fontSize: 14.5, color: T.inkSoft)),
-                  GestureDetector(
-                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            'Peça ao restaurante para criar seu acesso.'),
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: T.dark2,
+                    // ---------- botão principal ----------
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _abrirLogin(context),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        decoration: BoxDecoration(
+                          gradient: kGradRed,
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: T.redDark.withOpacity(.3),
+                              blurRadius: 18,
+                              offset: const Offset(0, 9),
+                            ),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('Entrar na conta',
+                                style: TextStyle(
+                                    fontSize: 16.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white)),
+                            SizedBox(width: 8),
+                            Icon(Icons.chevron_right_rounded,
+                                size: 22, color: Colors.white),
+                          ],
+                        ),
                       ),
                     ),
-                    child: const Text('Fale com o restaurante',
-                        style: TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w800,
-                            color: T.redDark)),
-                  ),
-                ],
+                    const SizedBox(height: 18),
+
+                    // ---------- rodapé ----------
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Não tem conta? ',
+                            style: TextStyle(fontSize: 14.5, color: T.inkSoft)),
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () =>
+                              ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Peça ao restaurante para criar seu acesso.'),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: T.dark2,
+                            ),
+                          ),
+                          child: const Text('Fale com o restaurante',
+                              style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: T.redDark)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),

@@ -103,9 +103,21 @@ class _TelaAguardandoState extends State<TelaAguardando> {
                   Expanded(
                     child: temAtivas
                         ? _comEntregas(margem)
-                        : Padding(
-                            padding: EdgeInsets.only(bottom: 96 + margem),
-                            child: _esperaGrande(),
+                        : LayoutBuilder(
+                            builder: (context, cons) {
+                              // centraliza quando cabe; rola quando nao cabe.
+                              // sem isso o conteudo "vaza" e o botao para de
+                              // aceitar toque mesmo aparecendo na tela.
+                              final livre = cons.maxHeight - 96 - margem;
+                              return SingleChildScrollView(
+                                padding: EdgeInsets.only(bottom: 82 + margem),
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                      minHeight: livre > 0 ? livre : 0),
+                                  child: _esperaGrande(),
+                                ),
+                              );
+                            },
                           ),
                   ),
                 ],
@@ -156,7 +168,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
   /* ---------------- com entregas ativas ---------------- */
   Widget _comEntregas(double margem) {
     return SingleChildScrollView(
-      padding: EdgeInsets.only(top: 18, bottom: 96 + margem),
+      padding: EdgeInsets.only(top: 18, bottom: 82 + margem),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -204,14 +216,13 @@ class _TelaAguardandoState extends State<TelaAguardando> {
       builder: (context, ativo, _) => Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Radar(ativo: ativo),
-          const SizedBox(height: 20),
-          Text(ativo ? 'Aguardando pedidos' : 'Você está pausado',
-              style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800,
-                  color: T.ink,
-                  letterSpacing: -.4)),
+          Radar(ativo: ativo, tamanho: 168, nucleo: 68, icone: 31),
+          const SizedBox(height: 18),
+          _TituloEspera(
+            texto: ativo ? 'Aguardando pedidos' : 'Você está pausado',
+            comSpinner: ativo,
+            tamanho: 19,
+          ),
           const SizedBox(height: 6),
           SizedBox(
             width: 260,
@@ -243,12 +254,11 @@ class _TelaAguardandoState extends State<TelaAguardando> {
         children: [
           Radar(ativo: ativo, tamanho: 104, nucleo: 48, icone: 22),
           const SizedBox(height: 12),
-          Text(ativo ? 'Aguardando novos pedidos' : 'Você está pausado',
-              style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: T.ink,
-                  letterSpacing: -.2)),
+          _TituloEspera(
+            texto: ativo ? 'Aguardando novos pedidos' : 'Você está pausado',
+            comSpinner: ativo,
+            tamanho: 15,
+          ),
           const SizedBox(height: 10),
           _selo(ativo),
           const SizedBox(height: 14),
@@ -339,10 +349,11 @@ class _TelaAguardandoState extends State<TelaAguardando> {
     return Opacity(
       opacity: ativo ? 1 : .45,
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: _simularPedido,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: const Color(0xFFD3D6DE), width: 1.5),

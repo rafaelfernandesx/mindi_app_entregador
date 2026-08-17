@@ -174,7 +174,6 @@ class _PintorBarra extends CustomPainter {
       ..arcToPoint(const Offset(r, 0), radius: const Radius.circular(r))
       ..close();
 
-    canvas.drawShadow(path, const Color(0xFF281A1E), 10, false);
     canvas.drawPath(path, Paint()..color = T.card);
   }
 

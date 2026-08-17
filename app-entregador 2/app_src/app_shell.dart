@@ -44,7 +44,7 @@ class _AppShellState extends State<AppShell> {
           Positioned(
             left: kSide,
             right: kSide,
-            bottom: 26 + margemInferior,
+            bottom: margemInferior,
             child: TabBarCurva(
               indice: _aba,
               aoTrocar: (i) => setState(() => _aba = i),
