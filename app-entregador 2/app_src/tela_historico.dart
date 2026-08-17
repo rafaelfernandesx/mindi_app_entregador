@@ -1,58 +1,7 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'api.dart';
 import 'modelos.dart';
-
-/* ---- dados de exemplo: troque pelos dados da sua API ---- */
-final _historico = <EntregaFeita>[
-  EntregaFeita(
-      id: 'P1042',
-      endereco: 'Rua Padre Valdevino',
-      hora: '14:02',
-      km: '3,4',
-      pagamento: 'Dinheiro',
-      valor: 8,
-      data: DateTime(2026, 8, 16)),
-  EntregaFeita(
-      id: 'P1041',
-      endereco: 'Av. Dom Luís',
-      hora: '13:10',
-      km: '5,1',
-      pagamento: 'PIX',
-      valor: 8,
-      data: DateTime(2026, 8, 16)),
-  EntregaFeita(
-      id: 'P1040',
-      endereco: 'Rua Silva Jatahy',
-      hora: '12:35',
-      km: '1,8',
-      pagamento: 'Cartão',
-      valor: 8,
-      data: DateTime(2026, 8, 16)),
-  EntregaFeita(
-      id: 'P1035',
-      endereco: 'Av. Santos Dumont',
-      hora: '19:45',
-      km: '4,0',
-      pagamento: 'PIX',
-      valor: 8,
-      data: DateTime(2026, 8, 15)),
-  EntregaFeita(
-      id: 'P1034',
-      endereco: 'Rua Barão de Aracati',
-      hora: '18:20',
-      km: '2,3',
-      pagamento: 'Dinheiro',
-      valor: 8,
-      data: DateTime(2026, 8, 15)),
-  EntregaFeita(
-      id: 'P1030',
-      endereco: 'Rua Ana Bilhar',
-      hora: '20:05',
-      km: '3,1',
-      pagamento: 'PIX',
-      valor: 8,
-      data: DateTime(2026, 8, 14)),
-];
 
 class TelaHistorico extends StatefulWidget {
   const TelaHistorico({super.key});
@@ -62,9 +11,62 @@ class TelaHistorico extends StatefulWidget {
 }
 
 class _TelaHistoricoState extends State<TelaHistorico> {
-  DateTime _de = DateTime(2026, 8, 1);
-  DateTime _ate = DateTime(2026, 8, 16);
+  late DateTime _de;
+  late DateTime _ate;
 
+  List<EntregaFeita> _entregas = [];
+  Map<String, dynamic> _resumo = {};
+  bool _carregando = true;
+  String? _erro;
+
+  @override
+  void initState() {
+    super.initState();
+    final hoje = DateTime.now();
+    _ate = hoje;
+    _de = hoje.subtract(const Duration(days: 15));
+    _buscar();
+  }
+
+  /* ---------------- API ---------------- */
+  Future<void> _buscar() async {
+    if (!apiConfigurada) {
+      setState(() => _carregando = false);
+      return;
+    }
+    setState(() {
+      _carregando = true;
+      _erro = null;
+    });
+    try {
+      final r = await Future.wait([
+        Api.historico(de: _de, ate: _ate),
+        Api.ganhos(de: _de, ate: _ate),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _entregas = (r[0] as List<Map<String, dynamic>>)
+            .map(EntregaFeita.fromJson)
+            .toList();
+        _resumo = r[1] as Map<String, dynamic>;
+        _carregando = false;
+      });
+    } on ApiErro catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _erro = e.mensagem;
+        _carregando = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _erro = 'Não foi possível carregar o histórico.';
+        _carregando = false;
+      });
+    }
+  }
+
+  /* ---------------- datas ---------------- */
   String _dm(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
   String _dma(DateTime d) => '${_dm(d)}/${d.year}';
@@ -74,8 +76,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
       context: context,
       initialDate: inicio ? _de : _ate,
       firstDate: DateTime(2024),
-      lastDate: DateTime(2030),
-      locale: const Locale('pt', 'BR'),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.light(primary: T.redDark),
@@ -83,47 +84,44 @@ class _TelaHistoricoState extends State<TelaHistorico> {
         child: child!,
       ),
     );
-    if (escolhida != null) {
-      setState(() {
-        if (inicio) {
-          _de = escolhida;
-          if (_ate.isBefore(_de)) _ate = _de;
-        } else {
-          _ate = escolhida;
-          if (_de.isAfter(_ate)) _de = _ate;
-        }
-      });
-    }
+    if (escolhida == null) return;
+    setState(() {
+      if (inicio) {
+        _de = escolhida;
+        if (_ate.isBefore(_de)) _ate = _de;
+      } else {
+        _ate = escolhida;
+        if (_de.isAfter(_ate)) _de = _ate;
+      }
+    });
+    _buscar();
   }
 
-  /// entregas dentro do período escolhido
-  List<EntregaFeita> get _filtradas => _historico.where((e) {
-        final d = DateTime(e.data.year, e.data.month, e.data.day);
-        final ini = DateTime(_de.year, _de.month, _de.day);
-        final fim = DateTime(_ate.year, _ate.month, _ate.day);
-        return !d.isBefore(ini) && !d.isAfter(fim);
-      }).toList();
-
-  /// rótulo do grupo: Hoje / Ontem / data
+  /// Hoje / Ontem / data
   String _rotuloDia(DateTime d) {
-    final hoje = DateTime(2026, 8, 16); // troque por DateTime.now()
+    final hoje = DateTime.now();
     final dia = DateTime(d.year, d.month, d.day);
-    final diff = hoje.difference(dia).inDays;
+    final ref = DateTime(hoje.year, hoje.month, hoje.day);
+    final diff = ref.difference(dia).inDays;
     if (diff == 0) return 'Hoje — ${_dm(d)}';
     if (diff == 1) return 'Ontem — ${_dm(d)}';
     return _dm(d);
   }
 
+  String _valor(dynamic v) {
+    if (v == null) return '—';
+    final n = v is num ? v.toDouble() : double.tryParse('$v'.replaceAll(',', '.'));
+    return n == null ? '—' : reaisCurto(n);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final lista = _filtradas;
-    final total = lista.fold<double>(0, (s, e) => s + e.valor);
-    final media = lista.isEmpty ? 0.0 : total / lista.length;
-
-    // agrupa por dia mantendo a ordem
+    // agrupa por dia mantendo a ordem que veio da API
     final grupos = <String, List<EntregaFeita>>{};
-    for (final e in lista) {
-      grupos.putIfAbsent(_rotuloDia(e.data), () => []).add(e);
+    for (final e in _entregas) {
+      final d = e.concluidaEm;
+      final chave = d == null ? 'Sem data' : _rotuloDia(d);
+      grupos.putIfAbsent(chave, () => []).add(e);
     }
 
     return TelaInterna(
@@ -152,32 +150,65 @@ class _TelaHistoricoState extends State<TelaHistorico> {
           // ---------- totais do período ----------
           Row(
             children: [
-              _Caixa(valor: '${lista.length}', label: 'entregas'),
+              _Caixa(
+                  valor: '${_resumo['totalDeliveries'] ?? _entregas.length}',
+                  label: 'entregas'),
               const SizedBox(width: 10),
               _Caixa(
-                  valor: 'R\$ ${total.toStringAsFixed(0)}',
+                  valor: _valor(_resumo['totalEarnings']),
                   label: 'total ganho',
                   cor: T.green),
               const SizedBox(width: 10),
               _Caixa(
-                  valor: 'R\$ ${media.toStringAsFixed(0)}', label: 'média'),
+                  valor: _valor(_resumo['averagePerDelivery']),
+                  label: 'média'),
             ],
           ),
+
+          // ---------- a receber ----------
+          if (_resumo['pendingPayment'] != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF6D6),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFF3E2A6)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.schedule_rounded,
+                      size: 17, color: Color(0xFF9A6B0F)),
+                  const SizedBox(width: 9),
+                  const Expanded(
+                    child: Text('Ainda a receber',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF7A6224))),
+                  ),
+                  Text(_valor(_resumo['pendingPayment']),
+                      style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF9A6B0F))),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
 
-          // ---------- lista agrupada ----------
-          if (lista.isEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: T.card,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: sombraCard(),
-              ),
-              child: const Text('Nenhuma entrega nesse período',
-                  style: TextStyle(fontSize: 13.5, color: T.inkSoft)),
+          // ---------- lista ----------
+          if (_carregando)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                  child: CircularProgressIndicator(color: T.redDark)),
             )
+          else if (_erro != null)
+            _Vazio(texto: _erro!, onTentar: _buscar)
+          else if (_entregas.isEmpty)
+            const _Vazio(texto: 'Nenhuma entrega nesse período')
           else
             Container(
               decoration: BoxDecoration(
@@ -220,6 +251,7 @@ class _CampoData extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
@@ -255,7 +287,7 @@ class _Caixa extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 13),
+        padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 4),
         decoration: BoxDecoration(
           color: T.card,
           borderRadius: BorderRadius.circular(16),
@@ -264,6 +296,8 @@ class _Caixa extends StatelessWidget {
         child: Column(
           children: [
             Text(valor,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
@@ -274,6 +308,44 @@ class _Caixa extends StatelessWidget {
                 style: const TextStyle(fontSize: 11, color: T.inkSoft)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/* ---------------- lista vazia / erro ---------------- */
+class _Vazio extends StatelessWidget {
+  final String texto;
+  final VoidCallback? onTentar;
+  const _Vazio({required this.texto, this.onTentar});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 34, horizontal: 20),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: T.card,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: sombraCard(),
+      ),
+      child: Column(
+        children: [
+          Text(texto,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13.5, color: T.inkSoft)),
+          if (onTentar != null) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: onTentar,
+              child: const Text('Tentar de novo',
+                  style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: T.redDark)),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -309,7 +381,7 @@ class _Linha extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('#${e.id} · ${e.endereco}',
+                Text('${e.numero} · ${e.cliente}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -318,14 +390,31 @@ class _Linha extends StatelessWidget {
                         color: T.ink,
                         letterSpacing: -.2)),
                 const SizedBox(height: 2),
-                Text('${e.hora} · ${e.km} km · ${e.pagamento}',
+                Text(
+                    [
+                      if (e.hora.isNotEmpty) e.hora,
+                      if (e.endereco.isNotEmpty) e.endereco,
+                    ].join(' · '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 11.5, color: T.inkSoft)),
               ],
             ),
           ),
-          Text('R\$ ${e.valor.toStringAsFixed(0)}',
-              style: const TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w800, color: T.green)),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(reaisCurto(e.valor),
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: T.green)),
+              if (!e.pago)
+                const Text('a receber',
+                    style: TextStyle(fontSize: 10, color: Color(0xFF9A6B0F))),
+            ],
+          ),
         ],
       ),
     );
