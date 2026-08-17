@@ -1,0 +1,56 @@
+name: Gerar APK
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar os arquivos do repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      - name: Instalar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Localizar o projeto e trazer para a raiz
+        run: |
+          SRC=$(dirname "$(find . -name pubspec.yaml -not -path './.git/*' | head -1)")
+          echo "Projeto encontrado em: $SRC"
+          if [ "$SRC" != "." ]; then
+            cp -r "$SRC"/. .
+          fi
+          ls -la
+
+      - name: Criar a estrutura Android
+        run: flutter create . --project-name entregador --platforms=android
+
+      - name: Colocar o codigo da tela no lugar certo
+        run: |
+          mkdir -p lib
+          cp app_src/*.dart lib/
+          ls lib
+
+      - name: Baixar dependencias
+        run: flutter pub get
+
+      - name: Compilar o APK
+        run: flutter build apk --release
+
+      - name: Disponibilizar o APK para download
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-entregador-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
