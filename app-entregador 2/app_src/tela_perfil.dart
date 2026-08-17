@@ -36,106 +36,110 @@ class _TelaPerfilState extends State<TelaPerfil> {
             child: SizedBox(height: 46, width: double.infinity),
           ),
           Transform.translate(
-            offset: const Offset(0, -40),
+            offset: const Offset(0, -30),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: kSide),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // ---------- CARTÃO DE IDENTIDADE ----------
+                  // ---------- CARTÃO DE IDENTIDADE (horizontal) ----------
                   Container(
-                    padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: T.card,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: sombraCard(opacidade: .08, blur: 20, y: 6),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: sombraCard(opacidade: .09, blur: 20, y: 6),
                     ),
                     child: Column(
                       children: [
-                        Transform.translate(
-                          offset: const Offset(0, -34),
-                          child: Container(
-                            width: 84,
-                            height: 84,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: kGradRed,
-                              border:
-                                  Border.all(color: Colors.white, width: 4),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: T.redDark.withOpacity(.34),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: Text(_usuario['iniciais']!,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: .5)),
-                          ),
-                        ),
-                        Transform.translate(
-                          offset: const Offset(0, -25),
-                          child: Column(
-                            children: [
-                              Text(_usuario['nome']!,
-                                  style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w800,
-                                      color: T.ink,
-                                      letterSpacing: -.4)),
-                              const SizedBox(height: 3),
-                              Text(_usuario['telefone']!,
-                                  style: const TextStyle(
-                                      fontSize: 13.5, color: T.inkSoft)),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFDECEC),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.storefront_rounded,
-                                        size: 13, color: T.redDark),
-                                    const SizedBox(width: 6),
-                                    Text(_usuario['empresa']!,
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: T.redDark)),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 13),
-                              const Divider(color: T.line, height: 1),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  _Stat(
-                                      valor: _usuario['entregas']!,
-                                      label: 'entregas'),
-                                  _Stat(
-                                      valor: '${_usuario['avaliacao']} ★',
-                                      label: 'avaliação',
-                                      cor: T.star,
-                                      divisor: true),
-                                  _Stat(
-                                      valor: _usuario['tempo']!,
-                                      label: 'na equipe',
-                                      divisor: true),
+                        Row(
+                          children: [
+                            Container(
+                              width: 64,
+                              height: 64,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: kGradRed,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: T.redDark.withOpacity(.3),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 6),
+                                  ),
                                 ],
                               ),
-                            ],
-                          ),
+                              child: Text(_usuario['iniciais']!,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 21,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: .5)),
+                            ),
+                            const SizedBox(width: 13),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(_usuario['nome']!,
+                                      style: const TextStyle(
+                                          fontSize: 19,
+                                          fontWeight: FontWeight.w800,
+                                          color: T.ink,
+                                          letterSpacing: -.4)),
+                                  const SizedBox(height: 2),
+                                  Text(_usuario['telefone']!,
+                                      style: const TextStyle(
+                                          fontSize: 13, color: T.inkSoft)),
+                                  const SizedBox(height: 7),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 11, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFDECEC),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.storefront_rounded,
+                                            size: 13, color: T.redDark),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(_usuario['empresa']!,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                  fontSize: 11.5,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: T.redDark)),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 13),
+                        const Divider(color: T.line, height: 1),
+                        const SizedBox(height: 11),
+                        Row(
+                          children: [
+                            _Stat(
+                                valor: _usuario['entregas']!,
+                                label: 'entregas'),
+                            _Stat(
+                                valor: '${_usuario['avaliacao']} ★',
+                                label: 'avaliação',
+                                cor: T.star,
+                                divisor: true),
+                            _Stat(
+                                valor: _usuario['tempo']!,
+                                label: 'na equipe',
+                                divisor: true),
+                          ],
                         ),
                       ],
                     ),
