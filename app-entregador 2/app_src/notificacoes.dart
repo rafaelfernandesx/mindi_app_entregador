@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'api.dart';
 import 'sessao.dart';
+import 'estado.dart';
 
 /* ================================================================== *
  *  NOTIFICAÇÕES (Firebase Cloud Messaging)
@@ -21,6 +22,15 @@ Future<void> _mensagemEmSegundoPlano(RemoteMessage mensagem) async {
   // O sistema já exibe a notificação. Nada a fazer aqui por enquanto.
 }
 
+/// Lê o orderId que veio na notificação e avisa a tela Início.
+void _guardarPedido(RemoteMessage mensagem) {
+  final bruto = mensagem.data['orderId'];
+  final id = bruto is int ? bruto : int.tryParse('${bruto ?? ''}');
+  if (id == null) return;
+  abaSelecionada.value = 0;
+  pedidoDaNotificacao.value = id;
+}
+
 class Notificacoes {
   static bool _pronto = false;
   static String? _ultimoToken;
@@ -34,6 +44,19 @@ class Notificacoes {
     try {
       await Firebase.initializeApp();
       FirebaseMessaging.onBackgroundMessage(_mensagemEmSegundoPlano);
+
+      // app estava FECHADO e o entregador tocou na notificação
+      final inicial = await FirebaseMessaging.instance.getInitialMessage();
+      if (inicial != null) _guardarPedido(inicial);
+
+      // app estava em SEGUNDO PLANO e o entregador tocou na notificação
+      FirebaseMessaging.onMessageOpenedApp.listen(_guardarPedido);
+
+      // app ABERTO na tela: só manda a lista se atualizar na hora
+      FirebaseMessaging.onMessage.listen((_) {
+        avisoDePedidoNovo.value = avisoDePedidoNovo.value + 1;
+      });
+
       _pronto = true;
     } catch (_) {
       // sem Firebase configurado: o app continua funcionando normal

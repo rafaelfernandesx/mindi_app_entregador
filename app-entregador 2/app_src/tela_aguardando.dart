@@ -35,13 +35,38 @@ class _TelaAguardandoState extends State<TelaAguardando> {
     _atualizar();
     // procura pedidos novos a cada 15 segundos
     _relogio = Timer.periodic(const Duration(seconds: 15), (_) => _atualizar());
+
+    // chegou notificação com o app aberto: busca na hora
+    avisoDePedidoNovo.addListener(_aoChegarPush);
+    // o entregador tocou na notificação: abre o pedido
+    pedidoDaNotificacao.addListener(_aoTocarNotificacao);
+    if (pedidoDaNotificacao.value != null) _aoTocarNotificacao();
   }
 
   @override
   void dispose() {
     _relogio?.cancel();
+    avisoDePedidoNovo.removeListener(_aoChegarPush);
+    pedidoDaNotificacao.removeListener(_aoTocarNotificacao);
     Localizacao.parar();
     super.dispose();
+  }
+
+  void _aoChegarPush() {
+    if (mounted) _atualizar();
+  }
+
+  /// abre o pedido que veio na notificação tocada
+  Future<void> _aoTocarNotificacao() async {
+    final id = pedidoDaNotificacao.value;
+    if (id == null || !mounted) return;
+    pedidoDaNotificacao.value = null;
+
+    await _atualizar();
+    if (!mounted || _modalAberto) return;
+
+    final achou = _disponiveis.where((p) => p.id == id);
+    if (achou.isNotEmpty) await _abrirPedido(achou.first);
   }
 
   /// toca e vibra quando chega pedido novo
