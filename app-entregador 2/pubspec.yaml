@@ -17,6 +17,8 @@ dependencies:
   geolocator: ^13.0.0
   firebase_core: ^3.0.0
   firebase_messaging: ^15.0.0
+  lucide_icons_flutter: ^3.1.15
+  google_fonts: ^6.2.1
 
 flutter:
   uses-material-design: true
