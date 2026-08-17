@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'tema.dart';
 import 'sessao.dart';
 import 'estado.dart';
+import 'notificacoes.dart';
 import 'tela_login.dart';
 import 'app_shell.dart';
 
@@ -13,6 +14,13 @@ Future<void> main() async {
   await Sessao.carregar();
   if (Sessao.driver['isOnline'] is bool) {
     entregadorAtivo.value = Sessao.driver['isOnline'] as bool;
+  }
+
+  // liga o Firebase (notificações)
+  await Notificacoes.ligarFirebase();
+  if (Sessao.logado) {
+    // não usa await: o app abre na hora e o token vai em segundo plano
+    Notificacoes.registrar();
   }
 
   runApp(const MeuApp());

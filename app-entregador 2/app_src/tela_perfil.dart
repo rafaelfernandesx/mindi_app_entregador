@@ -3,6 +3,7 @@ import 'tema.dart';
 import 'api.dart';
 import 'sessao.dart';
 import 'estado.dart';
+import 'notificacoes.dart';
 import 'tela_historico.dart';
 import 'tela_trocar_senha.dart';
 import 'tela_editar_perfil.dart';
@@ -86,6 +87,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
   }
 
   Future<void> _sair() async {
+    await Notificacoes.esquecer();
     await Api.logout();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(

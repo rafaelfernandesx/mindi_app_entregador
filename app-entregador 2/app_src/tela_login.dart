@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'tema.dart';
 import 'app_shell.dart';
 import 'api.dart';
+import 'notificacoes.dart';
 
 /* ================================================================== *
  *  TELA DE LOGIN
@@ -184,6 +185,9 @@ class _SheetLoginState extends State<_SheetLogin> {
         // modo demonstração (enquanto a API não estiver configurada)
         await Future.delayed(const Duration(milliseconds: 700));
       }
+
+      // avisa o Firebase que este celular agora tem um entregador logado
+      Notificacoes.registrar();
 
       if (!mounted) return;
       final nav = Navigator.of(context);
