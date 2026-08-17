@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'estado.dart';
 import 'tab_bar_curva.dart';
 import 'tela_aguardando.dart';
 import 'tela_ganhos.dart';
@@ -21,8 +22,6 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  int _aba = 0;
-
   final List<Widget> _telas = const [
     TelaAguardando(),
     TelaGanhos(),
@@ -39,15 +38,22 @@ class _AppShellState extends State<AppShell> {
       body: Stack(
         children: [
           // IndexedStack mantém o estado de cada tela ao trocar de aba
-          IndexedStack(index: _aba, children: _telas),
+          ValueListenableBuilder<int>(
+            valueListenable: abaSelecionada,
+            builder: (_, aba, __) =>
+                IndexedStack(index: aba, children: _telas),
+          ),
 
           Positioned(
             left: kSide,
             right: kSide,
             bottom: margemInferior,
-            child: TabBarCurva(
-              indice: _aba,
-              aoTrocar: (i) => setState(() => _aba = i),
+            child: ValueListenableBuilder<int>(
+              valueListenable: abaSelecionada,
+              builder: (_, aba, __) => TabBarCurva(
+                indice: aba,
+                aoTrocar: (i) => abaSelecionada.value = i,
+              ),
             ),
           ),
         ],

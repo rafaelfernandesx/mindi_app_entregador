@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'tela_historico.dart';
 
 /* ---- dados de exemplo: troque pelos dados da sua API ---- */
 class Entrega {
@@ -75,19 +76,9 @@ class _TelaGanhosState extends State<TelaGanhos> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        color: T.card,
         borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          colors: [T.dark1, T.dark2],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: T.dark2.withOpacity(.28),
-            blurRadius: 30,
-            offset: const Offset(0, 14),
-          ),
-        ],
+        boxShadow: sombraCard(opacidade: .10, blur: 26, y: 8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,7 +87,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
           Container(
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(.07),
+              color: const Color(0xFFF1F2F5),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
@@ -112,12 +103,21 @@ class _TelaGanhosState extends State<TelaGanhos> {
                       decoration: BoxDecoration(
                         color: on ? Colors.white : null,
                         borderRadius: BorderRadius.circular(999),
+                        boxShadow: on
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(.10),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Text(p,
                           style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
-                            color: on ? T.dark2 : Colors.white.withOpacity(.55),
+                            color: on ? T.ink : T.inkSoft,
                           )),
                     ),
                   ),
@@ -128,11 +128,11 @@ class _TelaGanhosState extends State<TelaGanhos> {
           const SizedBox(height: 16),
 
           Text(_rotulo[_periodo]!,
-              style: TextStyle(
+              style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.1,
-                  color: Colors.white.withOpacity(.5))),
+                  color: Color(0xFF9CA1AE))),
           const SizedBox(height: 2),
 
           // valor à esquerda, variação à direita
@@ -144,16 +144,16 @@ class _TelaGanhosState extends State<TelaGanhos> {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text('R\$ ',
+                    const Text('R\$ ',
                         style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white.withOpacity(.65))),
+                            color: T.inkSoft)),
                     const Text('96,00',
                         style: TextStyle(
                             fontSize: 35,
                             fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                            color: T.ink,
                             letterSpacing: -1)),
                   ],
                 ),
@@ -164,20 +164,20 @@ class _TelaGanhosState extends State<TelaGanhos> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2ECC71).withOpacity(.16),
+                    color: const Color(0xFFE8F7EE),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.trending_up_rounded,
-                          size: 13, color: T.greenLight),
+                          size: 13, color: T.green),
                       SizedBox(width: 5),
                       Text('12% vs. ontem',
                           style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
-                              color: T.greenLight)),
+                              color: T.green)),
                     ],
                   ),
                 ),
@@ -186,7 +186,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
           ),
           const SizedBox(height: 16),
 
-          Divider(color: Colors.white.withOpacity(.09), height: 1),
+          const Divider(color: T.line, height: 1),
           const SizedBox(height: 13),
 
           const Row(
@@ -215,7 +215,9 @@ class _TelaGanhosState extends State<TelaGanhos> {
                   letterSpacing: 1,
                   color: Color(0xFF9CA1AE))),
           GestureDetector(
-            onTap: () {},
+            behavior: HitTestBehavior.opaque,
+            onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TelaHistorico())),
             child: const Text('Ver todas',
                 style: TextStyle(
                     fontSize: 12.5,
@@ -351,17 +353,18 @@ class _Num extends StatelessWidget {
               left: 0,
               top: 3,
               bottom: 3,
-              child: Container(width: 1, color: Colors.white24),
+              child: Container(width: 1, color: T.line),
             ),
           Column(
             children: [
               Text(valor,
                   style: const TextStyle(
                       fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
+                      fontWeight: FontWeight.w800,
+                      color: T.ink,
+                      letterSpacing: -.3)),
               Text(label,
-                  style: const TextStyle(fontSize: 11, color: Colors.white54)),
+                  style: const TextStyle(fontSize: 11, color: T.inkSoft)),
             ],
           ),
         ],

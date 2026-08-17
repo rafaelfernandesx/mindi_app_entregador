@@ -17,7 +17,7 @@ class TelaEntregaConcluida extends StatelessWidget {
       backgroundColor: T.card,
       body: Column(
         children: [
-          const HeaderVermelho(alturaExtra: 12, child: BarraBoasVindas()),
+          const HeaderVermelho(alturaExtra: 12, child: BarraBoasVindas(clicavel: false)),
           Expanded(
             child: Padding(
               padding: EdgeInsets.fromLTRB(

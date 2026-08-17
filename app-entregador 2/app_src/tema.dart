@@ -68,7 +68,10 @@ class HeaderVermelho extends StatelessWidget {
 /// telas ficam sabendo na hora que o entregador pausou.
 class BarraBoasVindas extends StatelessWidget {
   final String nome;
-  const BarraBoasVindas({super.key, this.nome = 'Kelri'});
+
+  /// tocar no avatar/nome leva para a aba Perfil
+  final bool clicavel;
+  const BarraBoasVindas({super.key, this.nome = 'Kelri', this.clicavel = true});
 
   @override
   Widget build(BuildContext context) {
@@ -76,38 +79,50 @@ class BarraBoasVindas extends StatelessWidget {
       valueListenable: entregadorAtivo,
       builder: (context, ativo, _) => Row(
         children: [
-          Container(
-            width: 46,
-            height: 46,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(.18),
-              border:
-                  Border.all(color: Colors.white.withOpacity(.45), width: 1.5),
-            ),
-            child: Text(nome.substring(0, 1).toUpperCase(),
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700)),
-          ),
-          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Bem-vindo,',
-                    style: TextStyle(
-                        fontSize: 12.5, color: Colors.white.withOpacity(.78))),
-                Text(nome,
-                    style: const TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white)),
-              ],
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: clicavel ? () => abaSelecionada.value = 2 : null,
+              child: Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(.18),
+                      border: Border.all(
+                          color: Colors.white.withOpacity(.45), width: 1.5),
+                    ),
+                    child: Text(nome.substring(0, 1).toUpperCase(),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Bem-vindo,',
+                            style: TextStyle(
+                                fontSize: 12.5,
+                                color: Colors.white.withOpacity(.78))),
+                        Text(nome,
+                            style: const TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: () => entregadorAtivo.value = !ativo,
             child: Container(
@@ -120,7 +135,7 @@ class BarraBoasVindas extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(ativo ? 'Ativo' : 'Pausado',
+                  Text(ativo ? 'Online' : 'Offline',
                       style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12.5,
@@ -214,7 +229,7 @@ class TelaInterna extends StatelessWidget {
         children: [
           const HeaderVermelho(
             alturaExtra: 40,
-            child: BarraBoasVindas(),
+            child: BarraBoasVindas(clicavel: false),
           ),
           Expanded(
             child: Transform.translate(

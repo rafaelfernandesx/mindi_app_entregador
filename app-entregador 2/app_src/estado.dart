@@ -5,6 +5,9 @@ import 'package:flutter/foundation.dart';
  *  (quando o valor muda, quem estiver "ouvindo" se atualiza sozinho)
  * ================================================================== */
 
+/// Aba aberta na barra de baixo (0 Início, 1 Ganhos, 2 Perfil)
+final abaSelecionada = ValueNotifier<int>(0);
+
 /// Entregador está aceitando pedidos? (o toggle do header controla isso)
 final entregadorAtivo = ValueNotifier<bool>(true);
 

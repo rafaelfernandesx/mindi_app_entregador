@@ -203,7 +203,10 @@ class _TelaAguardandoState extends State<TelaAguardando> {
           ],
 
           const SizedBox(height: 8),
-          _esperaCompacta(),
+          ValueListenableBuilder<bool>(
+            valueListenable: entregadorAtivo,
+            builder: (context, ativo, _) => _botaoTeste(ativo),
+          ),
         ],
       ),
     );
@@ -223,74 +226,22 @@ class _TelaAguardandoState extends State<TelaAguardando> {
             comSpinner: ativo,
             tamanho: 19,
           ),
-          const SizedBox(height: 6),
-          SizedBox(
-            width: 260,
-            child: Text(
-              ativo
-                  ? 'Assim que chegar um pedido, ele aparece aqui e o celular vai tocar.'
-                  : 'Você não vai receber novos pedidos. Toque no botão lá em cima para voltar a ficar ativo.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 13.5, color: T.inkSoft, height: 1.45),
+          if (ativo) ...[
+            const SizedBox(height: 6),
+            const SizedBox(
+              width: 260,
+              child: Text(
+                'Assim que chegar um pedido, ele aparece aqui e o celular vai tocar.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 13.5, color: T.inkSoft, height: 1.45),
+              ),
             ),
-          ),
-          const SizedBox(height: 14),
-          _selo(ativo),
-          const SizedBox(height: 20),
+          ],
+          const SizedBox(height: 22),
           _cartaoUltimaEntrega(),
           const SizedBox(height: 14),
           _botaoTeste(ativo),
-        ],
-      ),
-    );
-  }
-
-  /* ---------------- espera (com entregas ativas) ---------------- */
-  Widget _esperaCompacta() {
-    return ValueListenableBuilder<bool>(
-      valueListenable: entregadorAtivo,
-      builder: (context, ativo, _) => Column(
-        children: [
-          Radar(ativo: ativo, tamanho: 104, nucleo: 48, icone: 22),
-          const SizedBox(height: 12),
-          _TituloEspera(
-            texto: ativo ? 'Aguardando novos pedidos' : 'Você está pausado',
-            comSpinner: ativo,
-            tamanho: 15,
-          ),
-          const SizedBox(height: 10),
-          _selo(ativo),
-          const SizedBox(height: 14),
-          _botaoTeste(ativo),
-        ],
-      ),
-    );
-  }
-
-  Widget _selo(bool ativo) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-      decoration: BoxDecoration(
-        color: ativo ? const Color(0xFFE8F7EE) : const Color(0xFFF1F2F5),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-                color: ativo ? const Color(0xFF22C55E) : T.tabOff,
-                shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 7),
-          Text(ativo ? 'Você está online' : 'Você está offline',
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: ativo ? const Color(0xFF15803D) : T.inkSoft)),
         ],
       ),
     );
