@@ -543,6 +543,42 @@ class _CardEntregaAtiva extends StatelessWidget {
   }
 }
 
+/* ---------- título de espera com spinner à esquerda ---------- */
+class _TituloEspera extends StatelessWidget {
+  final String texto;
+  final bool comSpinner;
+  final double tamanho;
+  const _TituloEspera(
+      {required this.texto, required this.comSpinner, required this.tamanho});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (comSpinner) ...[
+          SizedBox(
+            width: tamanho,
+            height: tamanho,
+            child: const CircularProgressIndicator(
+                strokeWidth: 2.6, color: T.redDark),
+          ),
+          const SizedBox(width: 10),
+        ],
+        Flexible(
+          child: Text(texto,
+              style: TextStyle(
+                  fontSize: tamanho,
+                  fontWeight: FontWeight.w800,
+                  color: T.ink,
+                  letterSpacing: -.3)),
+        ),
+      ],
+    );
+  }
+}
+
 class _Resumo extends StatelessWidget {
   final String valor, label;
   final Color? cor;
