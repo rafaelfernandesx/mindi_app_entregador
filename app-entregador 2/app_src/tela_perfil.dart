@@ -12,8 +12,15 @@ const _usuario = {
   'tempo': '8 meses',
 };
 
-class TelaPerfil extends StatelessWidget {
+class TelaPerfil extends StatefulWidget {
   const TelaPerfil({super.key});
+
+  @override
+  State<TelaPerfil> createState() => _TelaPerfilState();
+}
+
+class _TelaPerfilState extends State<TelaPerfil> {
+  bool _ativo = true;
 
   @override
   Widget build(BuildContext context) {
@@ -21,14 +28,12 @@ class TelaPerfil extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 130),
       child: Column(
         children: [
-          const HeaderVermelho(
+          HeaderVermelho(
             alturaExtra: 54,
-            child: Text('Meu perfil',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700)),
+            child: BarraBoasVindas(
+              ativo: _ativo,
+              onToggle: () => setState(() => _ativo = !_ativo),
+            ),
           ),
           Transform.translate(
             offset: const Offset(0, -40),
