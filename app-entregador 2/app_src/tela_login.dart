@@ -116,54 +116,19 @@ class TelaLogin extends StatelessWidget {
 }
 
 /* ---------------- ilustração ----------------
-   Para usar a sua imagem 3D no lugar do desenho:
-   1. crie a pasta assets/ no projeto e coloque a imagem lá
-   2. no pubspec.yaml, dentro de "flutter:", adicione:
-        assets:
-          - assets/entregador.png
-   3. troque o corpo do build abaixo por:
-        return Image.asset('assets/entregador.png', height: 300);
+   A imagem fica em assets/entregador.png (ao lado do pubspec.yaml).
+   Para trocar depois, basta substituir esse arquivo mantendo o nome.
 -------------------------------------------------- */
 class _Ilustracao extends StatelessWidget {
   const _Ilustracao();
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          width: 250,
-          height: 250,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                T.red.withOpacity(.14),
-                T.red.withOpacity(.02),
-              ],
-            ),
-          ),
-        ),
-        Container(
-          width: 168,
-          height: 168,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: kGradRed,
-            boxShadow: [
-              BoxShadow(
-                color: T.redDark.withOpacity(.35),
-                blurRadius: 34,
-                offset: const Offset(0, 18),
-              ),
-            ],
-          ),
-          child: const Icon(Icons.delivery_dining_rounded,
-              size: 96, color: Colors.white),
-        ),
-      ],
+    final largura = MediaQuery.of(context).size.width;
+    return Image.asset(
+      'assets/entregador.png',
+      width: largura * .82 > 330 ? 330 : largura * .82,
+      fit: BoxFit.contain,
     );
   }
 }
