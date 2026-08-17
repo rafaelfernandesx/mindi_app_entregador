@@ -347,7 +347,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
                 boxShadow: sombraCard(),
               ),
               child: _carregando
-                  ? final Center(
+                  ? Center(
                       child: Espera(texto: 'Carregando...', tamanho: 14),
                     )
                   : _erro != null
