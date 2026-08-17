@@ -24,9 +24,10 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Localizar o projeto e trazer para a raiz
+      - name: Localizar o projeto pela pasta app_src
         run: |
-          SRC=$(dirname "$(find . -name pubspec.yaml -not -path './.git/*' | head -1)")
+          APPSRC=$(find . -type d -name app_src -not -path './.git/*' | head -1)
+          SRC=$(dirname "$APPSRC")
           echo "Projeto encontrado em: $SRC"
           if [ "$SRC" != "." ]; then
             cp -r "$SRC"/. .
@@ -36,14 +37,20 @@ jobs:
       - name: Criar a estrutura Android
         run: flutter create . --project-name entregador --platforms=android
 
-      - name: Colocar o codigo da tela no lugar certo
+      - name: Colocar o codigo das telas no lugar certo
         run: |
           mkdir -p lib
           cp app_src/*.dart lib/
           ls lib
 
+      - name: Garantir o pacote de idioma portugues
+        run: flutter pub add flutter_localizations --sdk=flutter
+
       - name: Baixar dependencias
         run: flutter pub get
+
+      - name: Conferir se o codigo compila
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings || true
 
       - name: Compilar o APK
         run: flutter build apk --release
