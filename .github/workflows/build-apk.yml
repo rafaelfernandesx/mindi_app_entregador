@@ -35,24 +35,115 @@ jobs:
           ls -la
 
       - name: Criar a estrutura Android
-        run: flutter create . --project-name entregador --platforms=android
+        run: flutter create . --org com.mindi --project-name entregador --platforms=android
 
-      - name: Liberar acesso a internet no Android
+      - name: Liberar internet, localizacao e notificacao no Android
         run: |
           python3 - <<'EOF'
           caminho = 'android/app/src/main/AndroidManifest.xml'
           xml = open(caminho, encoding='utf-8').read()
+          extras = ''
           if 'android.permission.INTERNET' not in xml:
+              extras += '\n    <uses-permission android:name="android.permission.INTERNET"/>'
+          if 'ACCESS_FINE_LOCATION' not in xml:
+              extras += ('\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>'
+                         '\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>')
+          if 'POST_NOTIFICATIONS' not in xml:
+              extras += ('\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>'
+                         '\n    <uses-permission android:name="android.permission.VIBRATE"/>'
+                         '\n    <uses-permission android:name="android.permission.WAKE_LOCK"/>')
+          if '<queries>' not in xml:
+              extras += ('\n    <queries>'
+                         '\n        <intent><action android:name="android.intent.action.VIEW"/>'
+                         '<data android:scheme="https"/></intent>'
+                         '\n        <intent><action android:name="android.intent.action.DIAL"/>'
+                         '<data android:scheme="tel"/></intent>'
+                         '\n    </queries>')
+          if extras:
               i = xml.index('>', xml.index('<manifest')) + 1
-              xml = (xml[:i]
-                     + '\n    <uses-permission android:name="android.permission.INTERNET"/>'
-                     + xml[i:])
+              xml = xml[:i] + extras + xml[i:]
               open(caminho, 'w', encoding='utf-8').write(xml)
-              print('permissao de internet adicionada')
+              print('manifest atualizado')
           else:
-              print('permissao ja existia')
+              print('manifest ja estava ok')
           EOF
-          head -6 android/app/src/main/AndroidManifest.xml
+          head -14 android/app/src/main/AndroidManifest.xml
+
+      - name: Configurar o Firebase (notificacoes)
+        run: |
+          if [ ! -f google-services.json ]; then
+            echo "ERRO: google-services.json nao encontrado na pasta do projeto."
+            exit 1
+          fi
+          cp google-services.json android/app/google-services.json
+
+          NDK=$(ls "$ANDROID_SDK_ROOT/ndk" 2>/dev/null | sort -V | tail -1)
+          if [ -z "$NDK" ]; then NDK=27.0.12077973; fi
+          echo "NDK escolhido: $NDK"
+
+          NDK="$NDK" python3 - <<'EOF'
+          import os, re
+
+          ndk = os.environ['NDK']
+          pacote = 'com.mindi.entregador'
+
+          # acrescenta uma linha NO FIM do bloco plugins { }
+          # (o google-services precisa vir depois do plugin do Android)
+          def add_plugin(txt, linha):
+              i = txt.index('plugins {')
+              fim = txt.index('}', i)
+              return txt[:fim] + linha + txt[fim:]
+
+          app = 'android/app/build.gradle.kts'
+          if not os.path.exists(app):
+              app = 'android/app/build.gradle'
+          cfg = 'android/settings.gradle.kts'
+          if not os.path.exists(cfg):
+              cfg = 'android/settings.gradle'
+          kts = app.endswith('.kts')
+
+          # ---- settings.gradle: declara o plugin do Google Services ----
+          s = open(cfg, encoding='utf-8').read()
+          if 'com.google.gms.google-services' not in s:
+              linha = ('    id("com.google.gms.google-services") version "4.4.2" apply false\n'
+                       if cfg.endswith('.kts') else
+                       '    id "com.google.gms.google-services" version "4.4.2" apply false\n')
+              s = add_plugin(s, linha)
+              open(cfg, 'w', encoding='utf-8').write(s)
+              print('settings.gradle atualizado')
+
+          # ---- app/build.gradle: aplica o plugin + ajustes ----
+          a = open(app, encoding='utf-8').read()
+
+          if 'com.google.gms.google-services' not in a:
+              linha = ('    id("com.google.gms.google-services")\n' if kts
+                       else '    id "com.google.gms.google-services"\n')
+              a = add_plugin(a, linha)
+
+          # id do aplicativo tem que bater com o google-services.json
+          a = re.sub(r'(applicationId\s*=\s*)"[^"]*"', r'\1"%s"' % pacote, a)
+          a = re.sub(r'(applicationId\s+)"[^"]*"', r'\1"%s"' % pacote, a)
+
+          # Firebase precisa de Android 6 pra cima
+          a = re.sub(r'minSdk\s*=\s*flutter\.minSdkVersion', 'minSdk = 23', a)
+          a = re.sub(r'minSdkVersion\s+flutter\.minSdkVersion', 'minSdkVersion 23', a)
+
+          # versao do NDK que existe nesta maquina
+          if 'ndkVersion' in a:
+              a = re.sub(r'ndkVersion\s*=\s*[^\n]+', 'ndkVersion = "%s"' % ndk, a) if kts \
+                  else re.sub(r'ndkVersion\s+[^\n]+', 'ndkVersion "%s"' % ndk, a)
+          else:
+              i = a.index('android {')
+              j = a.index('\n', i) + 1
+              linha = ('    ndkVersion = "%s"\n' % ndk) if kts else ('    ndkVersion "%s"\n' % ndk)
+              a = a[:j] + linha + a[j:]
+
+          open(app, 'w', encoding='utf-8').write(a)
+          print('build.gradle atualizado')
+          EOF
+
+          echo '--- settings ---'; grep -n "google-services" android/settings.gradle* || true
+          echo '--- app ---'; grep -n "google-services\|applicationId\|minSdk\|ndkVersion" android/app/build.gradle* || true
 
       - name: Colocar o codigo das telas no lugar certo
         run: |
@@ -62,6 +153,9 @@ jobs:
 
       - name: Garantir o pacote de idioma portugues
         run: flutter pub add flutter_localizations --sdk=flutter
+
+      - name: Adicionar os pacotes do Firebase
+        run: flutter pub add firebase_core firebase_messaging
 
       - name: Baixar dependencias
         run: flutter pub get
