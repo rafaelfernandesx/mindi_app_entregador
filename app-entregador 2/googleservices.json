@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1096589498582",
+    "project_id": "mindi-app-entregador",
+    "storage_bucket": "mindi-app-entregador.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1096589498582:android:7420c59b1b5e63d9d6d177",
+        "android_client_info": {
+          "package_name": "com.mindi.entregador"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1fk3B6JY4AUS1cYggNhUE8UFtgkxxbz0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
