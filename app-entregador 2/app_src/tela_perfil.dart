@@ -5,6 +5,7 @@ import 'sessao.dart';
 import 'estado.dart';
 import 'tela_historico.dart';
 import 'tela_trocar_senha.dart';
+import 'tela_editar_perfil.dart';
 import 'tela_login.dart';
 
 class TelaPerfil extends StatefulWidget {
@@ -237,6 +238,18 @@ class _TelaPerfilState extends State<TelaPerfil> {
                     const _Titulo('CONTA'),
                     _Grupo(itens: [
                       _Item(
+                        icone: Icons.person_outline_rounded,
+                        cor: const Color(0xFF3B7DED),
+                        fundo: const Color(0xFFEAF1FE),
+                        titulo: 'Meus dados',
+                        sub: 'Nome e e-mail',
+                        onTap: () async {
+                          await Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => const TelaEditarPerfil()));
+                          if (mounted) setState(() {});
+                        },
+                      ),
+                      _Item(
                         icone: Icons.lock_rounded,
                         cor: T.redDark,
                         fundo: const Color(0xFFFDECEC),
@@ -247,8 +260,8 @@ class _TelaPerfilState extends State<TelaPerfil> {
                       ),
                       _Item(
                         icone: Icons.access_time_rounded,
-                        cor: const Color(0xFF3B7DED),
-                        fundo: const Color(0xFFEAF1FE),
+                        cor: const Color(0xFF7B4FE0),
+                        fundo: const Color(0xFFF3EEFD),
                         titulo: 'Histórico de entregas',
                         sub: _totalEntregas == null
                             ? null

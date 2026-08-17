@@ -248,6 +248,29 @@ class Api {
   }
 
   /* ================================================================ *
+   *  3. TURNO — localização
+   * ================================================================ */
+
+  /// POST /api/driver/shift/location
+  static Future<void> enviarLocalizacao({
+    required double lat,
+    required double lng,
+    double? precisao,
+    double? velocidade,
+  }) =>
+      _enviar('POST', '/api/driver/shift/location', corpo: {
+        'lat': lat,
+        'lng': lng,
+        if (precisao != null) 'accuracy': precisao,
+        if (velocidade != null) 'speed': velocidade,
+      });
+
+  /// PUT /api/driver/me/push-token — para as notificações
+  static Future<void> registrarPushToken(String token) =>
+      _enviar('PUT', '/api/driver/me/push-token',
+          corpo: {'pushToken': token, 'platform': 'android'});
+
+  /* ================================================================ *
    *  4. PEDIDOS
    * ================================================================ */
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'tema.dart';
 import 'api.dart';
 import 'estado.dart';
@@ -7,6 +8,7 @@ import 'modelos.dart';
 import 'sheet_novo_pedido.dart';
 import 'sheet_detalhes.dart';
 import 'tela_entrega_concluida.dart';
+import 'localizacao.dart';
 
 class TelaAguardando extends StatefulWidget {
   const TelaAguardando({super.key});
@@ -38,7 +40,26 @@ class _TelaAguardandoState extends State<TelaAguardando> {
   @override
   void dispose() {
     _relogio?.cancel();
+    Localizacao.parar();
     super.dispose();
+  }
+
+  /// toca e vibra quando chega pedido novo
+  Future<void> _alertar() async {
+    for (var i = 0; i < 3; i++) {
+      HapticFeedback.heavyImpact();
+      SystemSound.play(SystemSoundType.alert);
+      await Future.delayed(const Duration(milliseconds: 400));
+    }
+  }
+
+  /// liga o envio de localização só quando existe entrega ativa
+  void _cuidarDaLocalizacao() {
+    if (_ativas.isNotEmpty && !Localizacao.ligada) {
+      Localizacao.iniciar();
+    } else if (_ativas.isEmpty && Localizacao.ligada) {
+      Localizacao.parar();
+    }
   }
 
   void _aviso(String texto) {
@@ -97,6 +118,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
         media: g['averagePerDelivery'],
       );
 
+      _cuidarDaLocalizacao();
       _talvezAbrirModal();
     } on ApiErro catch (e) {
       if (!mounted) return;
@@ -117,6 +139,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
     final novo = _disponiveis.where((p) => !_jaMostrados.contains(p.id));
     if (novo.isEmpty) return;
 
+    _alertar();
     await _abrirPedido(novo.first);
   }
 
