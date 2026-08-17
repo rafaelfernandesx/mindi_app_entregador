@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'estado.dart';
+import 'sessao.dart';
+import 'api.dart';
 
 /* ================================================================== *
  *  TEMA — mude cores e tamanhos do app inteiro só aqui
@@ -67,14 +69,38 @@ class HeaderVermelho extends StatelessWidget {
 /// O botão Ativo mexe no estado global (estado.dart), então todas as
 /// telas ficam sabendo na hora que o entregador pausou.
 class BarraBoasVindas extends StatelessWidget {
-  final String nome;
-
   /// tocar no avatar/nome leva para a aba Perfil
   final bool clicavel;
-  const BarraBoasVindas({super.key, this.nome = 'Kelri', this.clicavel = true});
+  const BarraBoasVindas({super.key, this.clicavel = true});
+
+  /// liga/desliga o turno e avisa a API
+  Future<void> _alternar(BuildContext context, bool ativoAgora) async {
+    final novo = !ativoAgora;
+    entregadorAtivo.value = novo; // muda na hora, sem esperar a internet
+
+    if (!apiConfigurada) return;
+    try {
+      final confirmado = await Api.definirOnline(novo);
+      entregadorAtivo.value = confirmado;
+      await Sessao.atualizarDriver({'isOnline': confirmado});
+    } catch (e) {
+      entregadorAtivo.value = ativoAgora; // desfaz
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: T.dark2,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final nome = Sessao.nome.isNotEmpty ? Sessao.nome : 'Entregador';
+
     return ValueListenableBuilder<bool>(
       valueListenable: entregadorAtivo,
       builder: (context, ativo, _) => Row(
@@ -95,7 +121,7 @@ class BarraBoasVindas extends StatelessWidget {
                       border: Border.all(
                           color: Colors.white.withOpacity(.45), width: 1.5),
                     ),
-                    child: Text(nome.substring(0, 1).toUpperCase(),
+                            child: Text(Sessao.iniciais,
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 17,
@@ -124,7 +150,7 @@ class BarraBoasVindas extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           GestureDetector(
-            onTap: () => entregadorAtivo.value = !ativo,
+            onTap: () => _alternar(context, ativo),
             child: Container(
               padding: const EdgeInsets.fromLTRB(13, 7, 10, 7),
               decoration: BoxDecoration(

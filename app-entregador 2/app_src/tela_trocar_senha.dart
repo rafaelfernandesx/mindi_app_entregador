@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'api.dart';
 
 class TelaTrocarSenha extends StatefulWidget {
   const TelaTrocarSenha({super.key});
@@ -37,20 +38,37 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
       _salvando = true;
     });
 
-    // ---- aqui você chama a sua API para trocar a senha ----
-    await Future.delayed(const Duration(milliseconds: 900));
+    try {
+      String msg = 'Senha alterada com sucesso';
+      if (apiConfigurada) {
+        msg = await Api.trocarSenha(_atual.text, _nova.text);
+      } else {
+        await Future.delayed(const Duration(milliseconds: 700));
+      }
 
-    if (!mounted) return;
-    setState(() => _salvando = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Senha alterada com sucesso'),
-        backgroundColor: T.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-    Navigator.of(context).maybePop();
+      if (!mounted) return;
+      setState(() => _salvando = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: T.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      Navigator.of(context).maybePop();
+    } on ApiErro catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _salvando = false;
+        _erro = e.mensagem;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _salvando = false;
+        _erro = 'Não foi possível trocar a senha. Tente de novo.';
+      });
+    }
   }
 
   @override

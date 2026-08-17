@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'tema.dart';
 import 'app_shell.dart';
+import 'api.dart';
 
 /* ================================================================== *
  *  TELA DE LOGIN
@@ -158,6 +159,7 @@ class _SheetLoginState extends State<_SheetLogin> {
   final _senha = TextEditingController();
   bool _verSenha = false;
   bool _entrando = false;
+  String? _erro;
 
   @override
   void dispose() {
@@ -170,16 +172,38 @@ class _SheetLoginState extends State<_SheetLogin> {
   bool get _podeEntrar => _digitos == 11 && _senha.text.length >= 4;
 
   Future<void> _entrar() async {
-    setState(() => _entrando = true);
+    setState(() {
+      _entrando = true;
+      _erro = null;
+    });
 
-    // ---- aqui você chama a sua API de login ----
-    await Future.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
+    try {
+      if (apiConfigurada) {
+        await Api.login(_telefone.text, _senha.text);
+      } else {
+        // modo demonstração (enquanto a API não estiver configurada)
+        await Future.delayed(const Duration(milliseconds: 700));
+      }
 
-    Navigator.of(context).pop(); // fecha o modal
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const AppShell()),
-    );
+      if (!mounted) return;
+      final nav = Navigator.of(context);
+      nav.pop(); // fecha o modal
+      nav.pushReplacement(
+        MaterialPageRoute(builder: (_) => const AppShell()),
+      );
+    } on ApiErro catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _entrando = false;
+        _erro = e.mensagem;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _entrando = false;
+        _erro = 'Não foi possível entrar. Tente de novo.';
+      });
+    }
   }
 
   @override
@@ -368,6 +392,30 @@ class _SheetLoginState extends State<_SheetLogin> {
                 ),
               ),
             ),
+            if (_erro != null) ...[
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDECEC),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline_rounded,
+                        size: 18, color: T.redDark),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Text(_erro!,
+                          style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: T.redDark)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 22),
 
             // ---------- botão entrar ----------

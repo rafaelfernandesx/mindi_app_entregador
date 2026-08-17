@@ -1,9 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'tema.dart';
+import 'sessao.dart';
+import 'estado.dart';
 import 'tela_login.dart';
+import 'app_shell.dart';
 
-void main() => runApp(const MeuApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // lê o login salvo no celular antes de abrir a primeira tela
+  await Sessao.carregar();
+  if (Sessao.driver['isOnline'] is bool) {
+    entregadorAtivo.value = Sessao.driver['isOnline'] as bool;
+  }
+
+  runApp(const MeuApp());
+}
 
 class MeuApp extends StatelessWidget {
   const MeuApp({super.key});
@@ -25,8 +38,8 @@ class MeuApp extends StatelessWidget {
 
       theme: ThemeData(useMaterial3: true, scaffoldBackgroundColor: T.bg),
 
-      // primeira tela do app
-      home: const TelaLogin(),
+      // já logado vai direto pro app; senão, tela de login
+      home: Sessao.logado ? const AppShell() : const TelaLogin(),
     );
   }
 }
