@@ -152,10 +152,13 @@ jobs:
           ls lib
 
       - name: Garantir o pacote de idioma portugues
-        run: flutter pub add flutter_localizations --sdk=flutter
+        run: flutter pub add flutter_localizations --sdk=flutter || true
 
-      - name: Adicionar os pacotes do Firebase
-        run: flutter pub add firebase_core firebase_messaging
+      - name: Garantir os pacotes do Firebase
+        run: |
+          grep -q "firebase_core" pubspec.yaml || flutter pub add firebase_core
+          grep -q "firebase_messaging" pubspec.yaml || flutter pub add firebase_messaging
+          grep -n "firebase" pubspec.yaml
 
       - name: Baixar dependencias
         run: flutter pub get
