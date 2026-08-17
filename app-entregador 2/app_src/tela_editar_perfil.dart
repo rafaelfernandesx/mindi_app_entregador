@@ -32,8 +32,12 @@ class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
     return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(e);
   }
 
-  bool get _podeSalvar =>
-      _nome.text.trim().length >= 3 && _emailValido && !_salvando;
+  bool get _nomeValido {
+    final n = _nome.text.trim().length;
+    return n >= 3 && n <= 10;
+  }
+
+  bool get _podeSalvar => _nomeValido && _emailValido && !_salvando;
 
   Future<void> _salvar() async {
     setState(() {
@@ -53,7 +57,7 @@ class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
       await Sessao.atualizarDriver({'name': nome, 'email': email});
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Dados atualizados'),
         backgroundColor: T.green,
         behavior: SnackBarBehavior.floating,
@@ -93,7 +97,8 @@ class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
                 _Campo(
                   rotulo: 'Nome completo',
                   controller: _nome,
-                  dica: 'Como você quer ser chamado',
+                  dica: 'Como você quer ser chamado (até 10 letras)',
+                  maximo: 10,
                   aoMudar: () => setState(() {}),
                 ),
                 const SizedBox(height: 14),
@@ -113,9 +118,9 @@ class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF7F8FA),
+              color: T.campo,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFEDEEF2)),
+              border: Border.all(color: T.borda),
             ),
             child: Column(
               children: [
@@ -126,7 +131,7 @@ class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
                     rotulo: 'Restaurante',
                     valor: Sessao.empresa.isEmpty ? '—' : Sessao.empresa),
                 const SizedBox(height: 10),
-                const Text(
+                Text(
                   'Para mudar telefone ou restaurante, fale com quem administra o seu cadastro.',
                   style: TextStyle(fontSize: 11.5, color: T.inkSoft, height: 1.4),
                 ),
@@ -136,13 +141,13 @@ class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
 
           if (!_emailValido && _email.text.isNotEmpty) ...[
             const SizedBox(height: 12),
-            const Text('E-mail inválido',
+            Text('E-mail inválido',
                 style: TextStyle(fontSize: 12.5, color: T.redDark)),
           ],
           if (_erro != null) ...[
             const SizedBox(height: 12),
             Text(_erro!,
-                style: const TextStyle(fontSize: 12.5, color: T.redDark)),
+                style: TextStyle(fontSize: 12.5, color: T.redDark)),
           ],
 
           const SizedBox(height: 20),
@@ -178,7 +183,7 @@ class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
           Center(
             child: TextButton(
               onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('Cancelar',
+              child: Text('Cancelar',
                   style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
@@ -196,12 +201,14 @@ class _Campo extends StatelessWidget {
   final TextEditingController controller;
   final TextInputType? teclado;
   final VoidCallback aoMudar;
+  final int? maximo;
   const _Campo({
     required this.rotulo,
     required this.dica,
     required this.controller,
     required this.aoMudar,
     this.teclado,
+    this.maximo,
   });
 
   @override
@@ -210,35 +217,37 @@ class _Campo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(rotulo,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF6B7180))),
+                color: T.rotulo)),
         const SizedBox(height: 7),
         TextField(
           controller: controller,
           keyboardType: teclado,
+          maxLength: maximo,
           onChanged: (_) => aoMudar(),
-          style: const TextStyle(fontSize: 15, color: T.ink),
+          style: TextStyle(fontSize: 15, color: T.ink),
           decoration: InputDecoration(
             isDense: true,
+            counterText: '', // esconde o "0/10" embaixo do campo
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             filled: true,
-            fillColor: const Color(0xFFF7F8FA),
+            fillColor: T.campo,
             hintText: dica,
-            hintStyle: const TextStyle(color: Color(0xFFB9BCC6)),
+            hintStyle: TextStyle(color: T.fraco),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFE7E9EE)),
+              borderSide: BorderSide(color: T.borda),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFE7E9EE)),
+              borderSide: BorderSide(color: T.borda),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: T.redDark, width: 1.5),
+              borderSide: BorderSide(color: T.redDark, width: 1.5),
             ),
           ),
         ),
@@ -257,12 +266,12 @@ class _LinhaFixa extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(rotulo,
-            style: const TextStyle(fontSize: 12.5, color: T.inkSoft)),
+            style: TextStyle(fontSize: 12.5, color: T.inkSoft)),
         Flexible(
           child: Text(valor,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: T.ink)),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'icones.dart';
 import 'api.dart';
 
 class TelaTrocarSenha extends StatefulWidget {
@@ -123,14 +124,14 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF7F8FA),
+              color: T.campo,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFEDEEF2)),
+              border: Border.all(color: T.borda),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('A nova senha precisa ter:',
+                Text('A nova senha precisa ter:',
                     style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
@@ -148,7 +149,7 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
           if (_erro != null) ...[
             const SizedBox(height: 12),
             Text(_erro!,
-                style: const TextStyle(fontSize: 12.5, color: T.redDark)),
+                style: TextStyle(fontSize: 12.5, color: T.redDark)),
           ],
 
           const SizedBox(height: 20),
@@ -195,7 +196,7 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
           Center(
             child: TextButton(
               onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('Cancelar',
+              child: Text('Cancelar',
                   style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
@@ -232,44 +233,44 @@ class _Campo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(rotulo,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF6B7180))),
+                color: T.rotulo)),
         const SizedBox(height: 7),
         TextField(
           controller: controller,
           obscureText: escondido,
           maxLength: maximo,
           onChanged: (_) => aoMudar(),
-          style: const TextStyle(fontSize: 15, color: T.ink),
+          style: TextStyle(fontSize: 15, color: T.ink),
           decoration: InputDecoration(
             isDense: true,
             counterText: '', // esconde o "0/8" embaixo do campo
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             filled: true,
-            fillColor: const Color(0xFFF7F8FA),
+            fillColor: T.campo,
             hintText: '••••••',
-            hintStyle: const TextStyle(color: Color(0xFFB9BCC6)),
+            hintStyle: TextStyle(color: T.fraco),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFE7E9EE)),
+              borderSide: BorderSide(color: T.borda),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFE7E9EE)),
+              borderSide: BorderSide(color: T.borda),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: T.redDark, width: 1.5),
+              borderSide: BorderSide(color: T.redDark, width: 1.5),
             ),
             suffixIcon: IconButton(
               onPressed: aoVerAlternar,
               icon: Icon(
                 escondido
-                    ? Icons.visibility_off_rounded
-                    : Icons.visibility_rounded,
+                    ? Ico.olhoFechado
+                    : Ico.olho,
                 size: 20,
                 color: T.inkSoft,
               ),
@@ -292,9 +293,9 @@ class _Regra extends StatelessWidget {
     return Row(
       children: [
         Icon(
-          ok ? Icons.check_circle_rounded : Icons.circle_outlined,
+          ok ? Ico.checkCirculo : Ico.bolaVazia,
           size: 16,
-          color: ok ? T.green : const Color(0xFFC6CAD3),
+          color: ok ? T.green : T.fraco,
         ),
         const SizedBox(width: 8),
         Text(texto,

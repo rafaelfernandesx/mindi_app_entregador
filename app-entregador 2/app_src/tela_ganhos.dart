@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'icones.dart';
 import 'api.dart';
 import 'modelos.dart';
 import 'tela_historico.dart';
@@ -153,7 +154,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
           Container(
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F2F5),
+              color: T.campo2,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
@@ -170,7 +171,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
                       padding: const EdgeInsets.symmetric(vertical: 7),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: on ? Colors.white : null,
+                        color: on ? T.card : null,
                         borderRadius: BorderRadius.circular(999),
                         boxShadow: on
                             ? [
@@ -197,11 +198,11 @@ class _TelaGanhosState extends State<TelaGanhos> {
           const SizedBox(height: 16),
 
           Text(_rotulo,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.1,
-                  color: Color(0xFF9CA1AE))),
+                  color: T.inkSoft)),
           const SizedBox(height: 2),
 
           // valor + "a receber"
@@ -210,7 +211,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
             children: [
               Expanded(
                 child: _carregando
-                    ? const Padding(
+                    ? Padding(
                         padding: EdgeInsets.symmetric(vertical: 18),
                         child: Espera(texto: 'Carregando...', tamanho: 17),
                       )
@@ -218,13 +219,13 @@ class _TelaGanhosState extends State<TelaGanhos> {
                         crossAxisAlignment: CrossAxisAlignment.baseline,
                         textBaseline: TextBaseline.alphabetic,
                         children: [
-                          const Text('R\$ ',
+                          Text('R\$ ',
                               style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w700,
                                   color: T.inkSoft)),
                           Text('${partes[0]},${partes[1]}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 35,
                                   fontWeight: FontWeight.w800,
                                   color: T.ink,
@@ -239,20 +240,20 @@ class _TelaGanhosState extends State<TelaGanhos> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF6D6),
+                      color: T.amareloSuave,
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.schedule_rounded,
-                            size: 13, color: Color(0xFF9A6B0F)),
+                        Icon(Ico.relogio,
+                            size: 13, color: T.amarelo),
                         const SizedBox(width: 5),
                         Text('${reaisCurto(aReceber)} a receber',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF9A6B0F))),
+                                color: T.amarelo)),
                       ],
                     ),
                   ),
@@ -261,7 +262,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
           ),
           const SizedBox(height: 16),
 
-          const Divider(color: T.line, height: 1),
+          Divider(color: T.line, height: 1),
           const SizedBox(height: 13),
 
           Row(
@@ -302,16 +303,16 @@ class _TelaGanhosState extends State<TelaGanhos> {
               _periodo == 'Hoje'
                   ? 'ENTREGAS DE HOJE'
                   : 'ENTREGAS DO PERÍODO',
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1,
-                  color: Color(0xFF9CA1AE))),
+                  color: T.inkSoft)),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const TelaHistorico())),
-            child: const Text('Ver todas',
+            child: Text('Ver todas',
                 style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
@@ -346,7 +347,7 @@ class _TelaGanhosState extends State<TelaGanhos> {
                 boxShadow: sombraCard(),
               ),
               child: _carregando
-                  ? const Center(
+                  ? final Center(
                       child: Espera(texto: 'Carregando...', tamanho: 14),
                     )
                   : _erro != null
@@ -355,12 +356,12 @@ class _TelaGanhosState extends State<TelaGanhos> {
                             onTap: _buscar,
                             child: Text(_erro!,
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 12.5, color: T.inkSoft)),
                           ),
                         )
                       : _entregas.isEmpty
-                          ? const Center(
+                          ? Center(
                               child: Text('Nenhuma entrega nesse período',
                                   style: TextStyle(
                                       fontSize: 13, color: T.inkSoft)),
@@ -401,7 +402,7 @@ class _LinhaEntrega extends StatelessWidget {
       child: Container(
       height: _alturaLinha,
       decoration: BoxDecoration(
-        border: ultima ? null : const Border(bottom: BorderSide(color: T.line)),
+        border: ultima ? null : Border(bottom: BorderSide(color: T.line)),
       ),
       child: Row(
         children: [
@@ -410,10 +411,10 @@ class _LinhaEntrega extends StatelessWidget {
             height: 38,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFFFDECEC),
+              color: T.redSuave,
               borderRadius: BorderRadius.circular(13),
             ),
-            child: const Icon(Icons.location_on_rounded,
+            child: Icon(Ico.local,
                 size: 18, color: T.redDark),
           ),
           const SizedBox(width: 13),
@@ -425,7 +426,7 @@ class _LinhaEntrega extends StatelessWidget {
                 Text(e.endereco.isEmpty ? e.cliente : e.endereco,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w700,
                         color: T.ink,
@@ -438,7 +439,7 @@ class _LinhaEntrega extends StatelessWidget {
                     ].join(' · '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: T.inkSoft)),
+                    style: TextStyle(fontSize: 12, color: T.inkSoft)),
               ],
             ),
           ),
@@ -447,7 +448,7 @@ class _LinhaEntrega extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(reaisCurto(e.valor),
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                       color: T.green)),
@@ -456,13 +457,13 @@ class _LinhaEntrega extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 11,
                       color: e.pago
-                          ? const Color(0xFFA0A5B1)
-                          : const Color(0xFF9A6B0F))),
+                          ? T.inkSoft
+                          : T.amarelo)),
             ],
           ),
           const SizedBox(width: 4),
-          const Icon(Icons.chevron_right_rounded,
-              size: 20, color: Color(0xFFC7CAD3)),
+          Icon(Ico.avancar,
+              size: 20, color: T.fraco),
         ],
       ),
         ),
@@ -504,7 +505,7 @@ class _Num extends StatelessWidget {
                       color: cor ?? T.ink,
                       letterSpacing: -.3)),
               Text(label,
-                  style: const TextStyle(fontSize: 11, color: T.inkSoft)),
+                  style: TextStyle(fontSize: 11, color: T.inkSoft)),
             ],
           ),
         ],

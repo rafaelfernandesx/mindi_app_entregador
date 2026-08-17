@@ -1,9 +1,28 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /* ================================================================== *
  *  ESTADO GLOBAL — informações que várias telas precisam ver
  *  (quando o valor muda, quem estiver "ouvindo" se atualiza sozinho)
  * ================================================================== */
+
+/// Tema escuro ligado? (fica salvo no celular)
+final modoEscuro = ValueNotifier<bool>(false);
+
+const _kTema = 'modoEscuro';
+
+/// lê a preferência salva no celular (chamado quando o app abre)
+Future<void> carregarTema() async {
+  final p = await SharedPreferences.getInstance();
+  modoEscuro.value = p.getBool(_kTema) ?? false;
+}
+
+/// troca o tema e guarda a escolha
+Future<void> salvarTema(bool escuro) async {
+  modoEscuro.value = escuro;
+  final p = await SharedPreferences.getInstance();
+  await p.setBool(_kTema, escuro);
+}
 
 /// Aba aberta na barra de baixo (0 Início, 1 Ganhos, 2 Perfil)
 final abaSelecionada = ValueNotifier<int>(0);

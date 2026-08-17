@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'icones.dart';
 import 'modelos.dart';
 
 /* ================================================================== *
@@ -34,7 +35,7 @@ class _SheetNovoPedidoState extends State<_SheetNovoPedido> {
 
     return Container(
       padding: EdgeInsets.fromLTRB(18, 10, 18, 18 + margem),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: T.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -46,7 +47,7 @@ class _SheetNovoPedidoState extends State<_SheetNovoPedido> {
             height: 4,
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E4EA),
+              color: T.borda,
               borderRadius: BorderRadius.circular(999),
             ),
           ),
@@ -59,10 +60,10 @@ class _SheetNovoPedidoState extends State<_SheetNovoPedido> {
                 height: 46,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDECEC),
+                  color: T.redSuave,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const Icon(Icons.receipt_long_rounded,
+                child: Icon(Ico.recibo,
                     size: 22, color: T.redDark),
               ),
               const SizedBox(width: 13),
@@ -70,7 +71,7 @@ class _SheetNovoPedidoState extends State<_SheetNovoPedido> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Novo pedido!',
+                    Text('Novo pedido!',
                         style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
@@ -78,7 +79,7 @@ class _SheetNovoPedidoState extends State<_SheetNovoPedido> {
                             letterSpacing: -.4)),
                     Text('Pedido ${p.numero}',
                         style:
-                            const TextStyle(fontSize: 13, color: T.inkSoft)),
+                            TextStyle(fontSize: 13, color: T.inkSoft)),
                   ],
                 ),
               ),
@@ -86,11 +87,11 @@ class _SheetNovoPedidoState extends State<_SheetNovoPedido> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F7EE),
+                  color: T.greenSuave,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(p.taxaFormatada,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                         color: T.green)),
@@ -104,20 +105,20 @@ class _SheetNovoPedidoState extends State<_SheetNovoPedido> {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF7F8FA),
+              color: T.campo,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFEDEEF2)),
+              border: Border.all(color: T.borda),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.location_on_outlined,
+                    Icon(Ico.local,
                         size: 17, color: T.green),
                     const SizedBox(width: 7),
                     Text(p.cliente.isEmpty ? 'Entrega' : p.cliente,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: T.ink)),
@@ -125,8 +126,8 @@ class _SheetNovoPedidoState extends State<_SheetNovoPedido> {
                 ),
                 const SizedBox(height: 7),
                 Text(p.endereco,
-                    style: const TextStyle(
-                        fontSize: 14, color: Color(0xFF4A4F5C), height: 1.35)),
+                    style: TextStyle(
+                        fontSize: 14, color: T.inkMedio, height: 1.35)),
               ],
             ),
           ),
@@ -186,7 +187,7 @@ class _SheetNovoPedidoState extends State<_SheetNovoPedido> {
                             fontWeight: FontWeight.w800,
                             color: Colors.white)),
                     const SizedBox(width: 9),
-                    const Icon(Icons.check_rounded,
+                    const Icon(Ico.check,
                         size: 20, color: Colors.white),
                   ],
                 ],
@@ -197,7 +198,7 @@ class _SheetNovoPedidoState extends State<_SheetNovoPedido> {
 
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Agora não',
+            child: Text('Agora não',
                 style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
@@ -219,19 +220,19 @@ class _Caixa extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 4),
         decoration: BoxDecoration(
-          color: const Color(0xFFF7F8FA),
+          color: T.campo,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFEDEEF2)),
+          border: Border.all(color: T.borda),
         ),
         child: Column(
           children: [
             Text(rotulo,
-                style: const TextStyle(fontSize: 11.5, color: T.inkSoft)),
+                style: TextStyle(fontSize: 11.5, color: T.inkSoft)),
             const SizedBox(height: 2),
             Text(valor,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
                     color: T.ink,

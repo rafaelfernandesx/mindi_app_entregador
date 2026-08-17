@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'icones.dart';
 import 'api.dart';
 import 'sessao.dart';
 import 'estado.dart';
@@ -173,28 +174,28 @@ class _TelaPerfilState extends State<TelaPerfil> {
                                     Text(nome,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             fontSize: 19,
                                             fontWeight: FontWeight.w800,
                                             color: T.ink,
                                             letterSpacing: -.4)),
                                     const SizedBox(height: 2),
                                     Text(Sessao.telefoneFormatado,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             fontSize: 13, color: T.inkSoft)),
                                     const SizedBox(height: 7),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 11, vertical: 5),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFFDECEC),
+                                        color: T.redSuave,
                                         borderRadius:
                                             BorderRadius.circular(999),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.storefront_rounded,
+                                          Icon(Ico.restaurante,
                                               size: 13, color: T.redDark),
                                           const SizedBox(width: 6),
                                           Flexible(
@@ -202,7 +203,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
                                                 maxLines: 1,
                                                 overflow:
                                                     TextOverflow.ellipsis,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                     fontSize: 11.5,
                                                     fontWeight:
                                                         FontWeight.w800,
@@ -215,7 +216,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
                                 ),
                               ),
                               if (_carregando)
-                                const SizedBox(
+                                SizedBox(
                                   width: 16,
                                   height: 16,
                                   child: CircularProgressIndicator(
@@ -224,7 +225,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
                             ],
                           ),
                           const SizedBox(height: 13),
-                          const Divider(color: T.line, height: 1),
+                          Divider(color: T.line, height: 1),
                           const SizedBox(height: 11),
                           Row(
                             children: [
@@ -248,9 +249,9 @@ class _TelaPerfilState extends State<TelaPerfil> {
                     const _Titulo('CONTA'),
                     _Grupo(itens: [
                       _Item(
-                        icone: Icons.person_outline_rounded,
-                        cor: const Color(0xFF3B7DED),
-                        fundo: const Color(0xFFEAF1FE),
+                        icone: Ico.perfil,
+                        cor: T.azul,
+                        fundo: T.azulSuave,
                         titulo: 'Meus dados',
                         sub: 'Nome e e-mail',
                         onTap: () async {
@@ -260,18 +261,18 @@ class _TelaPerfilState extends State<TelaPerfil> {
                         },
                       ),
                       _Item(
-                        icone: Icons.lock_rounded,
+                        icone: Ico.cadeado,
                         cor: T.redDark,
-                        fundo: const Color(0xFFFDECEC),
+                        fundo: T.redSuave,
                         titulo: 'Trocar minha senha',
                         onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                                 builder: (_) => const TelaTrocarSenha())),
                       ),
                       _Item(
-                        icone: Icons.access_time_rounded,
-                        cor: const Color(0xFF7B4FE0),
-                        fundo: const Color(0xFFF3EEFD),
+                        icone: Ico.historico,
+                        cor: T.roxo,
+                        fundo: T.roxoSuave,
                         titulo: 'Histórico de entregas',
                         sub: _totalEntregas == null
                             ? null
@@ -282,21 +283,42 @@ class _TelaPerfilState extends State<TelaPerfil> {
                       ),
                     ]),
 
+                    // ---------- APARÊNCIA ----------
+                    const _Titulo('APARÊNCIA'),
+                    _Grupo(itens: [
+                      _Item(
+                        icone: modoEscuro.value
+                            ? Ico.lua
+                            : Ico.sol,
+                        cor: T.amarelo,
+                        fundo: T.amareloSuave,
+                        titulo: 'Tema escuro',
+                        sub: modoEscuro.value
+                            ? 'Ligado'
+                            : 'Desligado',
+                        ligado: modoEscuro.value,
+                        aoAlternar: (v) async {
+                          await salvarTema(v);
+                          if (mounted) setState(() {});
+                        },
+                      ),
+                    ]),
+
                     // ---------- SUPORTE ----------
                     const _Titulo('SUPORTE'),
                     _Grupo(itens: [
                       _Item(
-                        icone: Icons.help_rounded,
-                        cor: const Color(0xFF7B4FE0),
-                        fundo: const Color(0xFFF3EEFD),
+                        icone: Ico.ajuda,
+                        cor: T.roxo,
+                        fundo: T.roxoSuave,
                         titulo: 'Ajuda e suporte',
                         sub: 'Fale com a gente pelo WhatsApp',
                         onTap: () => abrirSuporte(context),
                       ),
                       _Item(
-                        icone: Icons.logout_rounded,
+                        icone: Ico.sair,
                         cor: T.redDark,
-                        fundo: const Color(0xFFFDECEC),
+                        fundo: T.redSuave,
                         titulo: 'Sair da conta',
                         perigo: true,
                         onTap: _sair,
@@ -304,10 +326,10 @@ class _TelaPerfilState extends State<TelaPerfil> {
                     ]),
 
                     const SizedBox(height: 14),
-                    const Text('Versão 1.0.0',
+                    Text('Versão 1.0.0',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            fontSize: 11.5, color: Color(0xFFA9AEBA))),
+                            fontSize: 11.5, color: T.inkSoft)),
                   ],
                 ),
               ),
@@ -327,11 +349,11 @@ class _Titulo extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(6, 16, 6, 7),
         child: Text(texto,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1,
-                color: Color(0xFF9CA1AE))),
+                color: T.inkSoft)),
       );
 }
 
@@ -345,7 +367,7 @@ class _Grupo extends StatelessWidget {
     for (var i = 0; i < itens.length; i++) {
       filhos.add(itens[i]);
       if (i < itens.length - 1) {
-        filhos.add(const Divider(color: Color(0xFFF2F3F6), height: 1));
+        filhos.add(Divider(color: T.campo2, height: 1));
       }
     }
     return Container(
@@ -367,6 +389,9 @@ class _Item extends StatelessWidget {
   final String? sub;
   final bool perigo;
   final VoidCallback? onTap;
+  /// quando vier preenchido, a linha mostra um interruptor no lugar da seta
+  final bool? ligado;
+  final ValueChanged<bool>? aoAlternar;
   const _Item({
     required this.icone,
     required this.cor,
@@ -375,13 +400,15 @@ class _Item extends StatelessWidget {
     this.sub,
     this.perigo = false,
     this.onTap,
+    this.ligado,
+    this.aoAlternar,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: onTap,
+      onTap: ligado != null ? () => aoAlternar?.call(!ligado!) : onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 11),
         child: Row(
@@ -410,16 +437,28 @@ class _Item extends StatelessWidget {
                   if (sub != null) ...[
                     const SizedBox(height: 1),
                     Text(sub!,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w500,
-                            color: Color(0xFF9CA1AE))),
+                            color: T.inkSoft)),
                   ],
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 20, color: Color(0xFFC6CAD3)),
+            if (ligado != null)
+              Switch(
+                value: ligado!,
+                onChanged: aoAlternar,
+                activeColor: Colors.white,
+                activeTrackColor: T.redDark,
+                inactiveThumbColor: Colors.white,
+                inactiveTrackColor: T.fraco,
+                trackOutlineColor:
+                    WidgetStateProperty.all(Colors.transparent),
+              )
+            else
+              Icon(Ico.avancar,
+                  size: 20, color: T.fraco),
           ],
         ),
       ),
@@ -461,7 +500,7 @@ class _Stat extends StatelessWidget {
                       letterSpacing: -.3,
                       color: cor ?? T.ink)),
               Text(label,
-                  style: const TextStyle(fontSize: 11, color: T.inkSoft)),
+                  style: TextStyle(fontSize: 11, color: T.inkSoft)),
             ],
           ),
         ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'icones.dart';
 
 /* ================================================================== *
  *  TAB BAR CURVA — barra branca flutuante com entalhe e bolha
@@ -11,9 +12,9 @@ class ItemAba {
 }
 
 const kAbas = [
-  ItemAba('Início', Icons.home_rounded),
-  ItemAba('Ganhos', Icons.bar_chart_rounded),
-  ItemAba('Perfil', Icons.person_rounded),
+  ItemAba('Início', Ico.inicio),
+  ItemAba('Ganhos', Ico.ganhos),
+  ItemAba('Perfil', Ico.perfil),
 ];
 
 class TabBarCurva extends StatefulWidget {
@@ -116,7 +117,7 @@ class _TabBarCurvaState extends State<TabBarCurva>
                       width: kBubble + 12,
                       height: kBubble + 12,
                       alignment: Alignment.center,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                           color: T.bg, shape: BoxShape.circle),
                       child: Container(
                         width: kBubble,

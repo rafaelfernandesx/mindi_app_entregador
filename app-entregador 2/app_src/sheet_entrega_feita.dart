@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'icones.dart';
 import 'api.dart';
 import 'modelos.dart';
 
@@ -74,7 +75,7 @@ class _SheetEntregaFeitaState extends State<_SheetEntregaFeita> {
     return Container(
       constraints: BoxConstraints(maxHeight: alturaMax),
       padding: EdgeInsets.fromLTRB(18, 10, 18, 18 + margem),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: T.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -86,7 +87,7 @@ class _SheetEntregaFeitaState extends State<_SheetEntregaFeita> {
             height: 4,
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E4EA),
+              color: T.borda,
               borderRadius: BorderRadius.circular(999),
             ),
           ),
@@ -99,10 +100,10 @@ class _SheetEntregaFeitaState extends State<_SheetEntregaFeita> {
                 height: 44,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE7F7ED),
+                  color: T.greenSuave,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const Icon(Icons.check_rounded,
+                child: Icon(Ico.check,
                     size: 24, color: T.green),
               ),
               const SizedBox(width: 13),
@@ -110,7 +111,7 @@ class _SheetEntregaFeitaState extends State<_SheetEntregaFeita> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Entrega concluída',
+                    Text('Entrega concluída',
                         style: TextStyle(
                             fontSize: 17.5,
                             fontWeight: FontWeight.w800,
@@ -118,7 +119,7 @@ class _SheetEntregaFeitaState extends State<_SheetEntregaFeita> {
                             letterSpacing: -.3)),
                     const SizedBox(height: 2),
                     Text('Pedido ${e.numero}  •  $_dataCompleta',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12.5, color: T.inkSoft)),
                   ],
                 ),
@@ -138,13 +139,13 @@ class _SheetEntregaFeitaState extends State<_SheetEntregaFeita> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF7F8FA),
+                      color: T.campo,
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFEDEEF2)),
+                      border: Border.all(color: T.borda),
                     ),
                     child: Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text('Você recebeu',
                               style: TextStyle(
                                   fontSize: 13.5,
@@ -152,7 +153,7 @@ class _SheetEntregaFeitaState extends State<_SheetEntregaFeita> {
                                   color: T.inkSoft)),
                         ),
                         Text(reais(e.valor),
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w800,
                                 color: T.ink,
@@ -168,20 +169,20 @@ class _SheetEntregaFeitaState extends State<_SheetEntregaFeita> {
                         horizontal: 14, vertical: 11),
                     decoration: BoxDecoration(
                       color: e.pago
-                          ? const Color(0xFFE7F7ED)
-                          : const Color(0xFFFFF6D6),
+                          ? T.greenSuave
+                          : T.amareloSuave,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
                       children: [
                         Icon(
                             e.pago
-                                ? Icons.verified_rounded
-                                : Icons.schedule_rounded,
+                                ? Ico.selo
+                                : Ico.relogio,
                             size: 16,
                             color: e.pago
                                 ? T.green
-                                : const Color(0xFF9A6B0F)),
+                                : T.amarelo),
                         const SizedBox(width: 8),
                         Text(e.pago ? 'Já pago a você' : 'Ainda a receber',
                             style: TextStyle(
@@ -189,7 +190,7 @@ class _SheetEntregaFeitaState extends State<_SheetEntregaFeita> {
                                 fontWeight: FontWeight.w700,
                                 color: e.pago
                                     ? T.green
-                                    : const Color(0xFF9A6B0F))),
+                                    : T.amarelo)),
                       ],
                     ),
                   ),
@@ -210,18 +211,18 @@ class _SheetEntregaFeitaState extends State<_SheetEntregaFeita> {
                         valor: d.totalFormatado),
                     if (d.produtos.isNotEmpty) ...[
                       const SizedBox(height: 14),
-                      const Text('Itens do pedido',
+                      Text('Itens do pedido',
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w800,
                               letterSpacing: .6,
-                              color: Color(0xFF9CA1AE))),
+                              color: T.inkSoft)),
                       const SizedBox(height: 8),
                       for (final item in d.produtos)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 6),
                           child: Text('•  $item',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 13.5, color: T.ink)),
                         ),
                     ],
@@ -238,10 +239,10 @@ class _SheetEntregaFeitaState extends State<_SheetEntregaFeita> {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 15),
               decoration: BoxDecoration(
-                color: const Color(0xFFF2F3F6),
+                color: T.campo2,
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: const Center(
+              child: Center(
                 child: Text('Fechar',
                     style: TextStyle(
                         fontSize: 15,
@@ -271,11 +272,11 @@ class _Linha extends StatelessWidget {
           SizedBox(
             width: 108,
             child: Text(rotulo,
-                style: const TextStyle(fontSize: 12.5, color: T.inkSoft)),
+                style: TextStyle(fontSize: 12.5, color: T.inkSoft)),
           ),
           Expanded(
             child: Text(valor,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
                     color: T.ink,

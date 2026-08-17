@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'icones.dart';
 import 'modelos.dart';
 
 /* ================================================================== *
@@ -46,21 +47,21 @@ class TelaEntregaConcluida extends StatelessWidget {
                     height: 44,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: T.card,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF3FA95A).withOpacity(.28),
+                          color: T.green.withOpacity(.28),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.check_rounded,
-                        size: 26, color: Color(0xFF3FA95A)),
+                    child: Icon(Ico.check,
+                        size: 26, color: T.green),
                   ),
                   const SizedBox(width: 12),
-                  const Flexible(
+                  Flexible(
                     child: Text('Entrega concluída',
                         style: TextStyle(
                             fontSize: 22,
@@ -71,7 +72,7 @@ class TelaEntregaConcluida extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              const Text('Guarde o comprovante se precisar',
+              Text('Guarde o comprovante se precisar',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 13, color: T.inkSoft)),
               const SizedBox(height: 22),
@@ -95,11 +96,11 @@ class TelaEntregaConcluida extends StatelessWidget {
                           height: 40,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8F7EE),
+                            color: T.greenSuave,
                             borderRadius: BorderRadius.circular(13),
                           ),
-                          child: const Icon(Icons.check_rounded,
-                              size: 20, color: Color(0xFF2E9E4F)),
+                          child: Icon(Ico.check,
+                              size: 20, color: T.green),
                         ),
                         const SizedBox(width: 11),
                         Expanded(
@@ -107,12 +108,12 @@ class TelaEntregaConcluida extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Pedido ${pedido.numero}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w800,
                                       color: T.ink)),
                               Text('$dataTexto · $hora',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 12, color: T.inkSoft)),
                             ],
                           ),
@@ -131,17 +132,17 @@ class TelaEntregaConcluida extends StatelessWidget {
                     _Linha(rotulo: 'Pagamento', valor: pedido.pagamento),
 
                     const SizedBox(height: 6),
-                    const Divider(color: T.line, height: 1),
+                    Divider(color: T.line, height: 1),
                     const SizedBox(height: 12),
 
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Você recebeu',
+                        Text('Você recebeu',
                             style: TextStyle(fontSize: 12.5, color: T.inkSoft)),
                         Text(pedido.taxaFormatada,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w800,
                                 color: T.green,
@@ -201,12 +202,12 @@ class _Linha extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(rotulo,
-              style: const TextStyle(fontSize: 12.5, color: T.inkSoft)),
+              style: TextStyle(fontSize: 12.5, color: T.inkSoft)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(valor,
                 textAlign: TextAlign.right,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                     color: T.ink)),
@@ -233,7 +234,7 @@ class _Serrilha extends StatelessWidget {
             child: Container(
               width: 18,
               height: 18,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                   color: T.bg, shape: BoxShape.circle),
             ),
           ),
@@ -248,7 +249,7 @@ class _Serrilha extends StatelessWidget {
                     (_) => Container(
                       width: 5,
                       height: 1.5,
-                      color: const Color(0xFFE4E6EC),
+                      color: T.borda,
                     ),
                   ),
                 );
@@ -261,7 +262,7 @@ class _Serrilha extends StatelessWidget {
             child: Container(
               width: 18,
               height: 18,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                   color: T.bg, shape: BoxShape.circle),
             ),
           ),

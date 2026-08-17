@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'icones.dart';
 import 'modelos.dart';
 
 /* ================================================================== *
@@ -42,7 +43,7 @@ class _SheetDetalhes extends StatelessWidget {
     return Container(
       constraints: BoxConstraints(maxHeight: alturaMax),
       padding: EdgeInsets.fromLTRB(18, 10, 18, 18 + margem),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: T.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -54,7 +55,7 @@ class _SheetDetalhes extends StatelessWidget {
             height: 4,
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E4EA),
+              color: T.borda,
               borderRadius: BorderRadius.circular(999),
             ),
           ),
@@ -67,10 +68,10 @@ class _SheetDetalhes extends StatelessWidget {
                 height: 46,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDECEC),
+                  color: T.redSuave,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const Icon(Icons.assignment_rounded,
+                child: Icon(Ico.lista,
                     size: 22, color: T.redDark),
               ),
               const SizedBox(width: 13),
@@ -79,12 +80,12 @@ class _SheetDetalhes extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Pedido ${p.numero}',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
                             color: T.ink,
                             letterSpacing: -.4)),
-                    const Text('Detalhes da entrega',
+                    Text('Detalhes da entrega',
                         style: TextStyle(fontSize: 13, color: T.inkSoft)),
                   ],
                 ),
@@ -95,10 +96,10 @@ class _SheetDetalhes extends StatelessWidget {
                   width: 36,
                   height: 36,
                   alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                      color: Color(0xFFF1F2F5), shape: BoxShape.circle),
-                  child: const Icon(Icons.close_rounded,
-                      size: 19, color: Color(0xFF6B7180)),
+                  decoration: BoxDecoration(
+                      color: T.campo2, shape: BoxShape.circle),
+                  child: Icon(Ico.fechar,
+                      size: 19, color: T.rotulo),
                 ),
               ),
             ],
@@ -117,28 +118,28 @@ class _SheetDetalhes extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(p.cliente.isEmpty ? 'Cliente' : p.cliente,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 16.5,
                                 fontWeight: FontWeight.w800,
                                 color: T.ink,
                                 letterSpacing: -.3)),
                         const SizedBox(height: 4),
                         Text(p.endereco,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 14,
-                                color: Color(0xFF4A4F5C),
+                                color: T.inkMedio,
                                 height: 1.35)),
                         const SizedBox(height: 13),
                         Row(
                           children: [
                             _BotaoContato(
-                              icone: Icons.map_outlined,
+                              icone: Ico.mapa,
                               texto: 'Abrir rota',
                               onTap: () => abrirLink(context, p.mapsUrl),
                             ),
                             const SizedBox(width: 8),
                             _BotaoContato(
-                              icone: Icons.phone_outlined,
+                              icone: Ico.telefone,
                               texto: 'Ligar',
                               onTap: () => abrirLink(
                                   context,
@@ -148,7 +149,7 @@ class _SheetDetalhes extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             _BotaoContato(
-                              icone: Icons.report_gmailerrorred_rounded,
+                              icone: Ico.alerta,
                               texto: 'Problema',
                               onTap: () =>
                                   Navigator.of(context).pop('problema'),
@@ -171,8 +172,8 @@ class _SheetDetalhes extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.only(bottom: 4),
                               child: Text('• $i',
-                                  style: const TextStyle(
-                                      fontSize: 14, color: Color(0xFF4A4F5C))),
+                                  style: TextStyle(
+                                      fontSize: 14, color: T.inkMedio)),
                             ),
                         ],
                       ),
@@ -185,9 +186,9 @@ class _SheetDetalhes extends StatelessWidget {
                     _Bloco(
                       titulo: 'OBSERVAÇÕES',
                       child: Text(p.observacao!,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 14,
-                              color: Color(0xFF4A4F5C),
+                              color: T.inkMedio,
                               height: 1.4)),
                     ),
                     const SizedBox(height: 12),
@@ -198,23 +199,23 @@ class _SheetDetalhes extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF6D6),
+                        color: T.amareloSuave,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFF3E2A6)),
+                        border: Border.all(color: T.amareloBorda),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('RECEBER NA ENTREGA',
+                          Text('RECEBER NA ENTREGA',
                               style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 1,
-                                  color: Color(0xFF9A6B0F))),
+                                  color: T.amarelo)),
                           const SizedBox(height: 6),
                           Text(
                               '${p.totalFormatado} em ${p.pagamento.toLowerCase()}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w800,
                                   color: T.ink,
@@ -223,8 +224,8 @@ class _SheetDetalhes extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                                 'Cliente vai pagar com ${reais(p.trocoPara)} — leve ${reais(p.troco)} de troco.',
-                                style: const TextStyle(
-                                    fontSize: 13.5, color: Color(0xFF7A6224))),
+                                style: TextStyle(
+                                    fontSize: 13.5, color: T.amarelo)),
                           ],
                         ],
                       ),
@@ -245,12 +246,12 @@ class _SheetDetalhes extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE7E9EE), width: 1.5),
+                  border: Border.all(color: T.borda, width: 1.5),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.pin_drop_outlined, size: 18, color: T.ink),
+                    Icon(Ico.local, size: 18, color: T.ink),
                     SizedBox(width: 8),
                     Text('Cheguei no local',
                         style: TextStyle(
@@ -271,11 +272,11 @@ class _SheetDetalhes extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 15),
               decoration: BoxDecoration(
-                color: const Color(0xFF5CC46C),
+                color: T.green,
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF5CC46C).withOpacity(.35),
+                    color: T.green.withOpacity(.35),
                     blurRadius: 16,
                     offset: const Offset(0, 8),
                   ),
@@ -284,7 +285,7 @@ class _SheetDetalhes extends StatelessWidget {
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_rounded, size: 22, color: Colors.white),
+                  Icon(Ico.checkCirculo, size: 22, color: Colors.white),
                   SizedBox(width: 10),
                   Text('MARCAR COMO ENTREGUE',
                       style: TextStyle(
@@ -324,7 +325,7 @@ Future<void> mostrarClienteNotificado(
       final margem = MediaQuery.of(context).padding.bottom;
       return Container(
         padding: EdgeInsets.fromLTRB(18, 22, 18, 18 + margem),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: T.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
@@ -339,11 +340,11 @@ Future<void> mostrarClienteNotificado(
                   height: 52,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8F7EE),
+                    color: T.greenSuave,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.check_rounded,
-                      size: 26, color: Color(0xFF3FA95A)),
+                  child: Icon(Ico.check,
+                      size: 26, color: T.green),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -351,14 +352,14 @@ Future<void> mostrarClienteNotificado(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(titulo,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 19,
                               fontWeight: FontWeight.w800,
                               color: T.ink,
                               letterSpacing: -.4)),
                       const SizedBox(height: 2),
                       Text('$primeiro foi avisado',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 13.5, color: T.inkSoft)),
                     ],
                   ),
@@ -369,13 +370,13 @@ Future<void> mostrarClienteNotificado(
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFFF2FBF5),
+                color: T.greenSuave,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFCDEBD8)),
+                border: Border.all(color: T.greenBorda),
               ),
               child: Text(texto,
-                  style: const TextStyle(
-                      fontSize: 14, color: Color(0xFF2F7D4B), height: 1.4)),
+                  style: TextStyle(
+                      fontSize: 14, color: T.greenEscuro, height: 1.4)),
             ),
             const SizedBox(height: 18),
             GestureDetector(
@@ -428,7 +429,7 @@ Future<Map<String, String>?> mostrarProblema(BuildContext context) {
           padding: EdgeInsets.only(bottom: teclado),
           child: Container(
             padding: EdgeInsets.fromLTRB(18, 20, 18, 18 + margem),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: T.card,
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
@@ -436,14 +437,14 @@ Future<Map<String, String>?> mostrarProblema(BuildContext context) {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Relatar um problema',
+                Text('Relatar um problema',
                     style: TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.w800,
                         color: T.ink,
                         letterSpacing: -.4)),
                 const SizedBox(height: 4),
-                const Text('O restaurante recebe o aviso na hora.',
+                Text('O restaurante recebe o aviso na hora.',
                     style: TextStyle(fontSize: 13, color: T.inkSoft)),
                 const SizedBox(height: 16),
 
@@ -457,25 +458,25 @@ Future<Map<String, String>?> mostrarProblema(BuildContext context) {
                           horizontal: 14, vertical: 13),
                       decoration: BoxDecoration(
                         color: escolhido == e.key
-                            ? const Color(0xFFFDECEC)
-                            : const Color(0xFFF7F8FA),
+                            ? T.redSuave
+                            : T.campo,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                             color: escolhido == e.key
                                 ? T.redDark
-                                : const Color(0xFFEDEEF2),
+                                : T.borda,
                             width: escolhido == e.key ? 1.5 : 1),
                       ),
                       child: Row(
                         children: [
                           Icon(
                               escolhido == e.key
-                                  ? Icons.radio_button_checked
-                                  : Icons.radio_button_unchecked,
+                                  ? Ico.bolaCheia
+                                  : Ico.bolaVazia,
                               size: 19,
                               color: escolhido == e.key
                                   ? T.redDark
-                                  : const Color(0xFFC6CAD3)),
+                                  : T.fraco),
                           const SizedBox(width: 10),
                           Text(e.value,
                               style: TextStyle(
@@ -496,22 +497,22 @@ Future<Map<String, String>?> mostrarProblema(BuildContext context) {
                   style: const TextStyle(fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Conte o que aconteceu (opcional)',
-                    hintStyle: const TextStyle(color: Color(0xFFB9BCC6)),
+                    hintStyle: TextStyle(color: T.fraco),
                     filled: true,
-                    fillColor: const Color(0xFFF7F8FA),
+                    fillColor: T.campo,
                     contentPadding: const EdgeInsets.all(14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFFE7E9EE)),
+                      borderSide: BorderSide(color: T.borda),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFFE7E9EE)),
+                      borderSide: BorderSide(color: T.borda),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide:
-                          const BorderSide(color: T.redDark, width: 1.5),
+                          BorderSide(color: T.redDark, width: 1.5),
                     ),
                   ),
                 ),
@@ -537,7 +538,7 @@ Future<Map<String, String>?> mostrarProblema(BuildContext context) {
                 const SizedBox(height: 4),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancelar',
+                  child: Text('Cancelar',
                       style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
@@ -566,17 +567,17 @@ class _Bloco extends StatelessWidget {
       decoration: BoxDecoration(
         color: T.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEDEEF2)),
+        border: Border.all(color: T.borda),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(titulo,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1,
-                  color: Color(0xFF9CA1AE))),
+                  color: T.inkSoft)),
           const SizedBox(height: 9),
           child,
         ],
@@ -602,7 +603,7 @@ class _BotaoContato extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 11),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(13),
-            border: Border.all(color: const Color(0xFFE7E9EE)),
+            border: Border.all(color: T.borda),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -613,7 +614,7 @@ class _BotaoContato extends StatelessWidget {
                 child: Text(texto,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
                         color: T.ink)),

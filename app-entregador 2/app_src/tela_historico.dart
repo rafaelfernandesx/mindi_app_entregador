@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'icones.dart';
 import 'api.dart';
 import 'modelos.dart';
 import 'sheet_entrega_feita.dart';
@@ -80,7 +81,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
       lastDate: DateTime.now().add(const Duration(days: 1)),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(primary: T.redDark),
+          colorScheme: ColorScheme.light(primary: T.redDark),
         ),
         child: child!,
       ),
@@ -136,9 +137,9 @@ class _TelaHistoricoState extends State<TelaHistorico> {
               Expanded(
                   child: _CampoData(
                       texto: _dma(_de), onTap: () => _escolherData(true))),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10),
-                child: Icon(Icons.arrow_forward_rounded,
+                child: Icon(Ico.seta,
                     size: 18, color: T.inkSoft),
               ),
               Expanded(
@@ -172,27 +173,27 @@ class _TelaHistoricoState extends State<TelaHistorico> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF6D6),
+                color: T.amareloSuave,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFF3E2A6)),
+                border: Border.all(color: T.amareloBorda),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.schedule_rounded,
-                      size: 17, color: Color(0xFF9A6B0F)),
+                  Icon(Ico.relogio,
+                      size: 17, color: T.amarelo),
                   const SizedBox(width: 9),
-                  const Expanded(
+                  Expanded(
                     child: Text('Ainda a receber',
                         style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF7A6224))),
+                            color: T.amarelo)),
                   ),
                   Text(_valor(_resumo['pendingPayment']),
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF9A6B0F))),
+                          color: T.amarelo)),
                 ],
               ),
             ),
@@ -201,7 +202,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
 
           // ---------- lista ----------
           if (_carregando)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
               child: Center(
                   child: CircularProgressIndicator(color: T.redDark)),
@@ -209,7 +210,7 @@ class _TelaHistoricoState extends State<TelaHistorico> {
           else if (_erro != null)
             _Vazio(texto: _erro!, onTentar: _buscar)
           else if (_entregas.isEmpty)
-            const _Vazio(texto: 'Nenhuma entrega nesse período')
+            _Vazio(texto: 'Nenhuma entrega nesse período')
           else
             Container(
               decoration: BoxDecoration(
@@ -225,12 +226,12 @@ class _TelaHistoricoState extends State<TelaHistorico> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 11),
-                      color: const Color(0xFFF7F8FA),
+                      color: T.campo,
                       child: Text(grupo.key,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF6B7180))),
+                              color: T.rotulo)),
                     ),
                     for (final e in grupo.value)
                       _Linha(
@@ -262,15 +263,15 @@ class _CampoData extends StatelessWidget {
         decoration: BoxDecoration(
           color: T.card,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE7E9EE)),
+          border: Border.all(color: T.borda),
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_rounded,
+            Icon(Ico.calendario,
                 size: 15, color: T.inkSoft),
             const SizedBox(width: 9),
             Text(texto,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
                     color: T.ink)),
@@ -295,7 +296,7 @@ class _Caixa extends StatelessWidget {
         decoration: BoxDecoration(
           color: T.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFEDEEF2)),
+          border: Border.all(color: T.borda),
         ),
         child: Column(
           children: [
@@ -309,7 +310,7 @@ class _Caixa extends StatelessWidget {
                     color: cor ?? T.ink)),
             const SizedBox(height: 1),
             Text(label,
-                style: const TextStyle(fontSize: 11, color: T.inkSoft)),
+                style: TextStyle(fontSize: 11, color: T.inkSoft)),
           ],
         ),
       ),
@@ -337,12 +338,12 @@ class _Vazio extends StatelessWidget {
         children: [
           Text(texto,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13.5, color: T.inkSoft)),
+              style: TextStyle(fontSize: 13.5, color: T.inkSoft)),
           if (onTentar != null) ...[
             const SizedBox(height: 12),
             GestureDetector(
               onTap: onTentar,
-              child: const Text('Tentar de novo',
+              child: Text('Tentar de novo',
                   style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w800,
@@ -369,7 +370,7 @@ class _Linha extends StatelessWidget {
       onTap: aoTocar,
       child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: T.line)),
       ),
       child: Row(
@@ -379,10 +380,10 @@ class _Linha extends StatelessWidget {
             height: 34,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F7EE),
+              color: T.greenSuave,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.check_rounded, size: 18, color: T.green),
+            child: Icon(Ico.check, size: 18, color: T.green),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -392,7 +393,7 @@ class _Linha extends StatelessWidget {
                 Text('${e.numero} · ${e.cliente}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: T.ink,
@@ -405,7 +406,7 @@ class _Linha extends StatelessWidget {
                     ].join(' · '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 11.5, color: T.inkSoft)),
+                    style: TextStyle(fontSize: 11.5, color: T.inkSoft)),
               ],
             ),
           ),
@@ -414,18 +415,18 @@ class _Linha extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(reaisCurto(e.valor),
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
                       color: T.green)),
               if (!e.pago)
-                const Text('a receber',
-                    style: TextStyle(fontSize: 10, color: Color(0xFF9A6B0F))),
+                Text('a receber',
+                    style: TextStyle(fontSize: 10, color: T.amarelo)),
             ],
           ),
           const SizedBox(width: 2),
-          const Icon(Icons.chevron_right_rounded,
-              size: 19, color: Color(0xFFC7CAD3)),
+          Icon(Ico.avancar,
+              size: 19, color: T.fraco),
         ],
       ),
       ),

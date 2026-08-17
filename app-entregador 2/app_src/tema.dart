@@ -1,26 +1,75 @@
 import 'package:flutter/material.dart';
+import 'icones.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'estado.dart';
 import 'sessao.dart';
 import 'api.dart';
 
 /* ================================================================== *
- *  TEMA — mude cores e tamanhos do app inteiro só aqui
+ *  TEMA — claro e escuro
+ *  Cada cor sabe se o app está no modo claro ou escuro.
+ *  Trocar o modo é só mexer em `modoEscuro` (estado.dart).
  * ================================================================== */
 class T {
-  static const bg = Color(0xFFF4F5F7);
-  static const red = Color(0xFFEC5B57);
-  static const redDark = Color(0xFFD8434B);
-  static const ink = Color(0xFF1A1D26);
-  static const inkSoft = Color(0xFF8A8F9C);
-  static const card = Color(0xFFFFFFFF);
-  static const green = Color(0xFF16A34A);
-  static const greenLight = Color(0xFF4ADE80);
-  static const dark1 = Color(0xFF252A38);
-  static const dark2 = Color(0xFF191D28);
-  static const line = Color(0xFFF0F1F4);
-  static const tabOff = Color(0xFFB9BCC6);
-  static const star = Color(0xFFF5A623);
+  static bool get escuro => modoEscuro.value;
+  static Color _c(int claro, int escuroHex) =>
+      Color(modoEscuro.value ? escuroHex : claro);
+
+  // ---- superfícies ----
+  static Color get bg => _c(0xFFF4F5F7, 0xFF09090B);
+  static Color get card => _c(0xFFFFFFFF, 0xFF18181B);
+  static Color get campo => _c(0xFFF7F8FA, 0xFF27272A);
+  static Color get campo2 => _c(0xFFF1F2F5, 0xFF27272A);
+  static Color get borda => _c(0xFFE7E9EE, 0xFF3F3F46);
+  static Color get line => _c(0xFFF0F1F4, 0xFF27272A);
+
+  // ---- textos ----
+  static Color get ink => _c(0xFF1A1D26, 0xFFFAFAFA);
+  static Color get inkMedio => _c(0xFF4A4F5C, 0xFFD4D4D8);
+  static Color get rotulo => _c(0xFF6B7180, 0xFFA1A1AA);
+  static Color get inkSoft => _c(0xFF8A8F9C, 0xFFA1A1AA);
+  static Color get fraco => _c(0xFFB9BCC6, 0xFF52525B);
+  static Color get tabOff => _c(0xFFB9BCC6, 0xFF71717A);
+
+  // ---- vermelho da marca ----
+  static Color get red => _c(0xFFEC5B57, 0xFFEF4444);
+  static Color get redDark => _c(0xFFD8434B, 0xFFDC2626);
+  static Color get redSuave => _c(0xFFFDECEC, 0xFF3A1D1F);
+  static Color get redBorda => _c(0xFFFAD9D9, 0xFF522427);
+
+  // ---- verde (concluído / online) ----
+  static Color get green => _c(0xFF16A34A, 0xFF22C55E);
+  static Color get greenEscuro => _c(0xFF15803D, 0xFF16A34A);
+  static Color get greenSuave => _c(0xFFE8F7EE, 0xFF14301F);
+  static Color get greenBorda => _c(0xFFCDEBD8, 0xFF1F5133);
+  static Color get greenLight => _c(0xFF4ADE80, 0xFF4ADE80);
+
+  // ---- amarelo (a receber / aviso) ----
+  static Color get amarelo => _c(0xFF9A6B0F, 0xFFEAB308);
+  static Color get amareloSuave => _c(0xFFFFF6D6, 0xFF3A2E0B);
+  static Color get amareloBorda => _c(0xFFF3E2A6, 0xFF5C4A12);
+
+  // ---- outras ----
+  static Color get roxo => _c(0xFF7B4FE0, 0xFFA78BFA);
+  static Color get roxoSuave => _c(0xFFF3EEFD, 0xFF251E3D);
+  static Color get azul => _c(0xFF3B7DED, 0xFF60A5FA);
+  static Color get azulSuave => _c(0xFFEAF1FE, 0xFF15243D);
+  static Color get dark1 => _c(0xFF252A38, 0xFF27272A);
+  static Color get dark2 => _c(0xFF191D28, 0xFF18181B);
+  static Color get star => _c(0xFFF5A623, 0xFFF5A623);
+}
+
+/// deixa a barra de navegação do Android transparente e com os
+/// ícones na cor certa para o tema atual
+void aplicarBarrasDoSistema() {
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+    systemNavigationBarContrastEnforced: false,
+    systemNavigationBarIconBrightness:
+        T.escuro ? Brightness.light : Brightness.dark,
+  ));
 }
 
 const double kBarH = 64;
@@ -30,16 +79,17 @@ const double kBubble = 56;
 const double kSide = 16;
 
 /// Degradê vermelho usado no header e nos botões
-const kGradRed = LinearGradient(
-  colors: [T.red, T.redDark],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-);
+LinearGradient get kGradRed => LinearGradient(
+      colors: [T.red, T.redDark],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
 
 /// Sombra suave dos cartões brancos
 List<BoxShadow> sombraCard({double opacidade = .06, double blur = 10, double y = 2}) => [
       BoxShadow(
-        color: const Color(0xFF1E233C).withOpacity(opacidade),
+        color: (T.escuro ? Colors.black : const Color(0xFF1E233C))
+            .withOpacity(T.escuro ? opacidade * 2.4 : opacidade),
         blurRadius: blur,
         offset: Offset(0, y),
       ),
@@ -54,7 +104,7 @@ class HeaderVermelho extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(gradient: kGradRed),
+      decoration: BoxDecoration(gradient: kGradRed),
       child: SafeArea(
         bottom: false,
         child: Padding(
@@ -209,7 +259,7 @@ class BarraBoasVindas extends StatelessWidget {
 /* ---------- abre link fora do app (Maps, telefone, WhatsApp) ---------- */
 Future<void> abrirLink(BuildContext context, String? url) async {
   if (url == null || url.trim().isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text('Link indisponível'),
       behavior: SnackBarBehavior.floating,
       backgroundColor: T.dark2,
@@ -220,7 +270,7 @@ Future<void> abrirLink(BuildContext context, String? url) async {
     final ok = await launchUrl(Uri.parse(url.trim()),
         mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Nenhum aplicativo encontrado para abrir isso'),
         behavior: SnackBarBehavior.floating,
         backgroundColor: T.dark2,
@@ -228,7 +278,7 @@ Future<void> abrirLink(BuildContext context, String? url) async {
     }
   } catch (_) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Não foi possível abrir'),
         behavior: SnackBarBehavior.floating,
         backgroundColor: T.dark2,
@@ -269,18 +319,18 @@ class TelaInterna extends StatelessWidget {
                 height: 42,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7F8FA),
+                  color: T.campo,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFEDEEF2)),
+                  border: Border.all(color: T.borda),
                 ),
-                child: const Icon(Icons.chevron_left_rounded,
+                child: Icon(Ico.voltar,
                     size: 26, color: T.ink),
               ),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Text(titulo,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: T.ink,
@@ -355,7 +405,7 @@ class Espera extends StatelessWidget {
         SizedBox(
           width: tamanho,
           height: tamanho,
-          child: const CircularProgressIndicator(
+          child: CircularProgressIndicator(
               strokeWidth: 2.6, color: T.redDark),
         ),
         const SizedBox(width: 10),

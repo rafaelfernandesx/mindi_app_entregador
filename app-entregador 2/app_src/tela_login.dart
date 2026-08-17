@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'tema.dart';
+import 'icones.dart';
 import 'app_shell.dart';
 import 'api.dart';
 import 'notificacoes.dart';
@@ -30,7 +31,7 @@ class TelaLogin extends StatelessWidget {
                     const _Ilustracao(),
                     const SizedBox(height: 34),
 
-                    const Text('Bora rodar?',
+                    Text('Bora rodar?',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             fontSize: 30,
@@ -38,7 +39,7 @@ class TelaLogin extends StatelessWidget {
                             color: T.ink,
                             letterSpacing: -.8)),
                     const SizedBox(height: 10),
-                    const Text(
+                    Text(
                       'Receba pedidos e acompanhe suas\nentregas em tempo real.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -73,7 +74,7 @@ class TelaLogin extends StatelessWidget {
                                     fontWeight: FontWeight.w800,
                                     color: Colors.white)),
                             SizedBox(width: 8),
-                            Icon(Icons.chevron_right_rounded,
+                            Icon(Ico.avancar,
                                 size: 22, color: Colors.white),
                           ],
                         ),
@@ -85,20 +86,20 @@ class TelaLogin extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text('Não tem conta? ',
+                        Text('Não tem conta? ',
                             style: TextStyle(fontSize: 14.5, color: T.inkSoft)),
                         GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onTap: () =>
                               ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text(
                                   'Peça ao restaurante para criar seu acesso.'),
                               behavior: SnackBarBehavior.floating,
                               backgroundColor: T.dark2,
                             ),
                           ),
-                          child: const Text('Fale com o restaurante',
+                          child: Text('Fale com o restaurante',
                               style: TextStyle(
                                   fontSize: 14.5,
                                   fontWeight: FontWeight.w800,
@@ -220,7 +221,7 @@ class _SheetLoginState extends State<_SheetLogin> {
       padding: EdgeInsets.only(bottom: teclado),
       child: Container(
         padding: EdgeInsets.fromLTRB(18, 20, 18, 18 + margem),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: T.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
@@ -237,14 +238,14 @@ class _SheetLoginState extends State<_SheetLogin> {
                   height: 50,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFDECEC),
+                    color: T.redSuave,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.person_rounded,
+                  child: Icon(Ico.perfil,
                       size: 24, color: T.redDark),
                 ),
                 const SizedBox(width: 13),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -268,10 +269,10 @@ class _SheetLoginState extends State<_SheetLogin> {
                     width: 36,
                     height: 36,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                        color: Color(0xFFF1F2F5), shape: BoxShape.circle),
-                    child: const Icon(Icons.close_rounded,
-                        size: 19, color: Color(0xFF6B7180)),
+                    decoration: BoxDecoration(
+                        color: T.campo2, shape: BoxShape.circle),
+                    child: Icon(Ico.fechar,
+                        size: 19, color: T.rotulo),
                   ),
                 ),
               ],
@@ -279,28 +280,28 @@ class _SheetLoginState extends State<_SheetLogin> {
             const SizedBox(height: 22),
 
             // ---------- telefone ----------
-            const Text('Telefone',
+            Text('Telefone',
                 style: TextStyle(
                     fontSize: 14, fontWeight: FontWeight.w700, color: T.ink)),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE7E9EE)),
+                border: Border.all(color: T.borda),
               ),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 15),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF7F8FA),
+                    decoration: BoxDecoration(
+                      color: T.campo,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(13),
                         bottomLeft: Radius.circular(13),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
                         Text('🇧🇷', style: TextStyle(fontSize: 17)),
                         SizedBox(width: 7),
@@ -312,20 +313,20 @@ class _SheetLoginState extends State<_SheetLogin> {
                       ],
                     ),
                   ),
-                  Container(width: 1, height: 48, color: const Color(0xFFE7E9EE)),
+                  Container(width: 1, height: 48, color: T.borda),
                   Expanded(
                     child: TextField(
                       controller: _telefone,
                       keyboardType: TextInputType.phone,
                       onChanged: (_) => setState(() {}),
                       inputFormatters: [_MascaraTelefone()],
-                      style: const TextStyle(fontSize: 15.5, color: T.ink),
-                      decoration: const InputDecoration(
+                      style: TextStyle(fontSize: 15.5, color: T.ink),
+                      decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding:
                             EdgeInsets.symmetric(horizontal: 14, vertical: 15),
                         hintText: '(00) 0 0000-0000',
-                        hintStyle: TextStyle(color: Color(0xFFB9BCC6)),
+                        hintStyle: TextStyle(color: T.fraco),
                       ),
                     ),
                   ),
@@ -338,21 +339,21 @@ class _SheetLoginState extends State<_SheetLogin> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Senha',
+                Text('Senha',
                     style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: T.ink)),
                 GestureDetector(
                   onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Text(
                           'Peça ao restaurante para redefinir sua senha.'),
                       behavior: SnackBarBehavior.floating,
                       backgroundColor: T.dark2,
                     ),
                   ),
-                  child: const Text('Esqueceu a senha?',
+                  child: Text('Esqueceu a senha?',
                       style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w700,
@@ -365,18 +366,18 @@ class _SheetLoginState extends State<_SheetLogin> {
               controller: _senha,
               obscureText: !_verSenha,
               onChanged: (_) => setState(() {}),
-              style: const TextStyle(fontSize: 15.5, color: T.ink),
+              style: TextStyle(fontSize: 15.5, color: T.ink),
               decoration: InputDecoration(
                 hintText: 'Digite sua senha',
-                hintStyle: const TextStyle(color: Color(0xFFB9BCC6)),
-                prefixIcon: const Icon(Icons.lock_outline_rounded,
-                    size: 20, color: Color(0xFFB9BCC6)),
+                hintStyle: TextStyle(color: T.fraco),
+                prefixIcon: Icon(Ico.cadeado,
+                    size: 20, color: T.fraco),
                 suffixIcon: IconButton(
                   onPressed: () => setState(() => _verSenha = !_verSenha),
                   icon: Icon(
                     _verSenha
-                        ? Icons.visibility_rounded
-                        : Icons.visibility_off_rounded,
+                        ? Ico.olho
+                        : Ico.olhoFechado,
                     size: 20,
                     color: T.inkSoft,
                   ),
@@ -384,15 +385,15 @@ class _SheetLoginState extends State<_SheetLogin> {
                 contentPadding: const EdgeInsets.symmetric(vertical: 15),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFE7E9EE)),
+                  borderSide: BorderSide(color: T.borda),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFE7E9EE)),
+                  borderSide: BorderSide(color: T.borda),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: T.redDark, width: 1.5),
+                  borderSide: BorderSide(color: T.redDark, width: 1.5),
                 ),
               ),
             ),
@@ -401,17 +402,17 @@ class _SheetLoginState extends State<_SheetLogin> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDECEC),
+                  color: T.redSuave,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline_rounded,
+                    Icon(Ico.erro,
                         size: 18, color: T.redDark),
                     const SizedBox(width: 9),
                     Expanded(
                       child: Text(_erro!,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: T.redDark)),
@@ -450,7 +451,7 @@ class _SheetLoginState extends State<_SheetLogin> {
                                     fontWeight: FontWeight.w800,
                                     color: Colors.white)),
                             SizedBox(width: 8),
-                            Icon(Icons.chevron_right_rounded,
+                            Icon(Ico.avancar,
                                 size: 22, color: Colors.white),
                           ],
                         ),

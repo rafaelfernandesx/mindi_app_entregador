@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'tema.dart';
+import 'icones.dart';
 import 'api.dart';
 import 'estado.dart';
 import 'modelos.dart';
@@ -387,13 +388,13 @@ class _TelaAguardandoState extends State<TelaAguardando> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(titulo,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: T.ink,
                     letterSpacing: -.3)),
             Text(direita,
-                style: const TextStyle(fontSize: 13, color: T.inkSoft)),
+                style: TextStyle(fontSize: 13, color: T.inkSoft)),
           ],
         ),
       );
@@ -423,7 +424,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
                   ),
                   if (ativo) ...[
                     const SizedBox(height: 6),
-                    const SizedBox(
+                    SizedBox(
                       width: 260,
                       child: Text(
                         'Assim que o restaurante liberar um pedido, ele aparece aqui.',
@@ -487,7 +488,7 @@ class _CardDisponivel extends StatelessWidget {
         decoration: BoxDecoration(
           color: T.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFFAD9D9), width: 1.5),
+          border: Border.all(color: T.redBorda, width: 1.5),
           boxShadow: sombraCard(),
         ),
         child: Row(
@@ -497,10 +498,10 @@ class _CardDisponivel extends StatelessWidget {
               height: 44,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: const Color(0xFFFDECEC),
+                color: T.redSuave,
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(Icons.receipt_long_rounded,
+              child: Icon(Ico.recibo,
                   size: 21, color: T.redDark),
             ),
             const SizedBox(width: 12),
@@ -511,7 +512,7 @@ class _CardDisponivel extends StatelessWidget {
                   Row(
                     children: [
                       Text(p.numero,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 15.5,
                               fontWeight: FontWeight.w800,
                               color: T.ink,
@@ -521,15 +522,15 @@ class _CardDisponivel extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE8F7EE),
+                          color: T.greenSuave,
                           borderRadius: BorderRadius.circular(7),
                         ),
-                        child: const Text('DISPONÍVEL',
+                        child: Text('DISPONÍVEL',
                             style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: .5,
-                                color: Color(0xFF15803D))),
+                                color: T.greenEscuro)),
                       ),
                     ],
                   ),
@@ -537,7 +538,7 @@ class _CardDisponivel extends StatelessWidget {
                   Text(p.endereco,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 13.5, color: T.inkSoft, height: 1.3)),
                 ],
               ),
@@ -547,14 +548,14 @@ class _CardDisponivel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(p.taxaFormatada,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                         color: T.green,
                         letterSpacing: -.3)),
                 const SizedBox(height: 2),
                 Text('${p.itens} ${p.itens == 1 ? 'item' : 'itens'}',
-                    style: const TextStyle(fontSize: 12, color: T.inkSoft)),
+                    style: TextStyle(fontSize: 12, color: T.inkSoft)),
               ],
             ),
           ],
@@ -590,7 +591,7 @@ class _CardAtiva extends StatelessWidget {
       decoration: BoxDecoration(
         color: T.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFEDEEF2)),
+        border: Border.all(color: T.borda),
         boxShadow: sombraCard(),
       ),
       child: Column(
@@ -603,10 +604,10 @@ class _CardAtiva extends StatelessWidget {
                 height: 44,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDECEC),
+                  color: T.redSuave,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.local_shipping_rounded,
+                child: Icon(Ico.caminhao,
                     size: 21, color: T.redDark),
               ),
               const SizedBox(width: 12),
@@ -617,7 +618,7 @@ class _CardAtiva extends StatelessWidget {
                     Row(
                       children: [
                         Text(p.numero,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 15.5,
                                 fontWeight: FontWeight.w800,
                                 color: T.ink,
@@ -627,15 +628,15 @@ class _CardAtiva extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFCF0C8),
+                            color: T.amareloSuave,
                             borderRadius: BorderRadius.circular(7),
                           ),
                           child: Text(selo,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: .5,
-                                  color: Color(0xFF8A6B10))),
+                                  color: T.amarelo)),
                         ),
                       ],
                     ),
@@ -643,14 +644,14 @@ class _CardAtiva extends StatelessWidget {
                     Text(p.endereco,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 13.5, color: T.inkSoft, height: 1.3)),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
               Text(p.taxaFormatada,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                       color: T.green,
@@ -669,12 +670,12 @@ class _CardAtiva extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFE7E9EE)),
+                      border: Border.all(color: T.borda),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.visibility_outlined, size: 17, color: T.ink),
+                        Icon(Ico.olho, size: 17, color: T.ink),
                         SizedBox(width: 7),
                         Text('Detalhes',
                             style: TextStyle(
@@ -703,8 +704,8 @@ class _CardAtiva extends StatelessWidget {
                       children: [
                         Icon(
                             entrega.emRota
-                                ? Icons.navigation_rounded
-                                : Icons.arrow_forward_rounded,
+                                ? Ico.navegar
+                                : Ico.seta,
                             size: 17,
                             color: Colors.white),
                         const SizedBox(width: 8),
@@ -737,23 +738,23 @@ class _CaixaErro extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
-        color: const Color(0xFFFDECEC),
+        color: T.redSuave,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
-          const Icon(Icons.wifi_off_rounded, size: 18, color: T.redDark),
+          Icon(Ico.semInternet, size: 18, color: T.redDark),
           const SizedBox(width: 9),
           Expanded(
             child: Text(texto,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                     color: T.redDark)),
           ),
           GestureDetector(
             onTap: onTentar,
-            child: const Text('Tentar',
+            child: Text('Tentar',
                 style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,
@@ -782,7 +783,7 @@ class _TituloEspera extends StatelessWidget {
           SizedBox(
             width: tamanho,
             height: tamanho,
-            child: const CircularProgressIndicator(
+            child: CircularProgressIndicator(
                 strokeWidth: 2.6, color: T.redDark),
           ),
           const SizedBox(width: 10),
@@ -835,7 +836,7 @@ class _Resumo extends StatelessWidget {
                       letterSpacing: -.4,
                       color: cor ?? T.ink)),
               Text(label,
-                  style: const TextStyle(fontSize: 11, color: T.inkSoft)),
+                  style: TextStyle(fontSize: 11, color: T.inkSoft)),
             ],
           ),
         ],
@@ -916,7 +917,7 @@ class _RadarState extends State<Radar> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final cores = widget.ativo
         ? [T.red, T.redDark]
-        : [const Color(0xFFC9CCD4), const Color(0xFFAAAEB8)];
+        : [T.fraco, T.inkSoft];
 
     return SizedBox(
       width: widget.tamanho,
@@ -955,8 +956,8 @@ class _RadarState extends State<Radar> with SingleTickerProviderStateMixin {
                 ),
                 child: Icon(
                     widget.ativo
-                        ? Icons.two_wheeler_rounded
-                        : Icons.pause_rounded,
+                        ? Ico.moto
+                        : Ico.pausa,
                     size: widget.icone,
                     color: Colors.white),
               ),
