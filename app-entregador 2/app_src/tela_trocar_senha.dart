@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'tema.dart';
 import 'icones.dart';
 import 'api.dart';
@@ -15,7 +16,9 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
   final _nova = TextEditingController();
   final _confirma = TextEditingController();
 
-  bool _verAtual = false, _verNova = false, _verConfirma = false;
+  // começam visíveis: o entregador confere o que digitou.
+  // Se quiser esconder, é só tocar no olhinho.
+  bool _verAtual = true, _verNova = true, _verConfirma = true;
   bool _salvando = false;
   String? _erro;
 
@@ -29,10 +32,9 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
 
   bool get _tamanhoOk =>
       _nova.text.length >= 6 && _nova.text.length <= 8;
-  bool get _numeroOk => _nova.text.contains(RegExp(r'[0-9]'));
   bool get _iguaisOk => _nova.text.isNotEmpty && _nova.text == _confirma.text;
   bool get _podeSalvar =>
-      _atual.text.isNotEmpty && _tamanhoOk && _numeroOk && _iguaisOk;
+      _atual.text.isNotEmpty && _tamanhoOk && _iguaisOk;
 
   Future<void> _salvar() async {
     setState(() {
@@ -137,9 +139,7 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
                         fontWeight: FontWeight.w700,
                         color: T.ink)),
                 const SizedBox(height: 9),
-                _Regra(texto: 'De 6 a 8 caracteres', ok: _tamanhoOk),
-                const SizedBox(height: 6),
-                _Regra(texto: 'Pelo menos 1 número', ok: _numeroOk),
+                _Regra(texto: 'Somente números', ok: true),
                 const SizedBox(height: 6),
                 _Regra(texto: 'As duas senhas devem ser iguais', ok: _iguaisOk),
               ],
@@ -242,6 +242,9 @@ class _Campo extends StatelessWidget {
           controller: controller,
           obscureText: escondido,
           maxLength: maximo,
+          // a senha é só de números
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           onChanged: (_) => aoMudar(),
           style: TextStyle(fontSize: 15, color: T.ink),
           decoration: InputDecoration(
@@ -251,7 +254,7 @@ class _Campo extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             filled: true,
             fillColor: T.campo,
-            hintText: '••••••',
+            hintText: 'Só números',
             hintStyle: TextStyle(color: T.fraco),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),

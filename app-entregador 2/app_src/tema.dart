@@ -376,11 +376,14 @@ class TelaInterna extends StatelessWidget {
                   borderRadius: BorderRadius.vertical(
                       top: Radius.circular(tecladoAberto ? 0 : 28)),
                 ),
+                // viewPadding (e não padding) porque o Scaffold já
+                // "consome" o padding — e aí a barra do Android acabava
+                // ficando por cima do botão de salvar.
                 padding: EdgeInsets.fromLTRB(
                     kSide,
                     tecladoAberto ? 10 : 22,
                     kSide,
-                    18 + MediaQuery.of(context).padding.bottom),
+                    26 + MediaQuery.viewPaddingOf(context).bottom),
                 child: rolavel
                     ? SingleChildScrollView(
                         keyboardDismissBehavior:

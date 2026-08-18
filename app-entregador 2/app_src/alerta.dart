@@ -10,6 +10,11 @@ import 'package:vibration/vibration.dart';
 /// evita vibrar várias vezes seguidas se chegarem 2 avisos juntos
 DateTime? _ultimoAlerta;
 
+/// Diz que o entregador JÁ foi avisado agora (por exemplo, a notificação
+/// do sistema acabou de tocar e vibrar). Assim a tela não vibra de novo
+/// alguns segundos depois, quando a lista de pedidos é atualizada.
+void marcarAlertaFeito() => _ultimoAlerta = DateTime.now();
+
 Future<void> alertarPedidoNovo({bool forcar = false}) async {
   final agora = DateTime.now();
   if (!forcar &&

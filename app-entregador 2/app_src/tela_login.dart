@@ -226,6 +226,11 @@ class _TelaLoginState extends State<TelaLogin> {
                       TextField(
                         controller: _senha,
                         obscureText: !_verSenha,
+                        // a senha é só de números: abre o teclado numérico
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         onChanged: (_) => setState(() {}),
                         style: TextStyle(fontSize: 15.5, color: T.ink),
                         decoration: InputDecoration(

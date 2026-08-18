@@ -95,8 +95,8 @@ class _TelaAguardandoState extends State<TelaAguardando> {
   }
 
   void _aoChegarPush() {
-    // vibra na hora que o aviso chega, sem esperar a lista atualizar
-    alertarPedidoNovo();
+    // quem vibra agora é a própria notificação (canal "Pedidos novos"),
+    // então aqui só atualizamos a lista de pedidos
     if (mounted) _atualizar();
   }
 
@@ -138,8 +138,11 @@ class _TelaAguardandoState extends State<TelaAguardando> {
   /* ================================================================ *
    *  BUSCA OS DADOS NA API
    * ================================================================ */
-  Future<void> _atualizar() async {
-    if (!apiConfigurada || _carregando) return;
+  Future<void> _atualizar({bool forcar = false}) async {
+    // "forcar" é usado logo depois de uma ação do entregador: nesses
+    // casos não dá para descartar a atualização, senão a tela fica
+    // desencontrada do que ele acabou de fazer.
+    if (!apiConfigurada || (_carregando && !forcar)) return;
     setState(() => _carregando = true);
 
     try {
@@ -257,11 +260,24 @@ class _TelaAguardandoState extends State<TelaAguardando> {
 
     try {
       await Api.aceitarPedido(p.id);
+      if (!mounted) return;
+
+      // Mostra a entrega na hora, sem esperar o servidor confirmar.
+      // Sem isso o pedido some da tela por alguns segundos: já saiu
+      // dos disponíveis e ainda não entrou na lista de ativas.
+      setState(() {
+        _disponiveis = _disponiveis.where((d) => d.id != p.id).toList();
+        if (!_ativas.any((a) => a.pedido.id == p.id)) {
+          _ativas = [..._ativas, EntregaAtiva(p)];
+          _ativasConhecidas.add(p.id);
+        }
+      });
+
       _aviso('Pedido ${p.numero} aceito');
-      await _atualizar();
+      await _atualizar(forcar: true);
     } on ApiErro catch (e) {
       _aviso(e.mensagem);
-      await _atualizar();
+      await _atualizar(forcar: true);
     }
   }
 
@@ -270,7 +286,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
       await Api.sairParaEntrega(e.pedido.id);
       if (!mounted) return;
       await mostrarClienteNotificado(context, e.pedido);
-      await _atualizar();
+      await _atualizar(forcar: true);
     } on ApiErro catch (erro) {
       _aviso(erro.mensagem);
     }
@@ -453,9 +469,6 @@ class _TelaAguardandoState extends State<TelaAguardando> {
           ],
           const SizedBox(height: 8),
         ],
-        // com entrega ativa o entregador já tem o que fazer:
-        // o "aguardando novos pedidos" só atrapalha a leitura do card
-        if (_ativas.isEmpty) _rodapeEspera(),
       ],
     );
   }
@@ -541,27 +554,6 @@ class _TelaAguardandoState extends State<TelaAguardando> {
     );
   }
 
-  /// linha de espera que fica no fim da lista
-  Widget _rodapeEspera() {
-    return ValueListenableBuilder<bool>(
-      valueListenable: entregadorAtivo,
-      builder: (context, ativo, _) => Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          if (_erro != null) ...[
-            _CaixaErro(texto: _erro!, onTentar: _atualizar),
-            const SizedBox(height: 12),
-          ],
-          _TituloEspera(
-            texto: ativo ? 'Aguardando novos pedidos' : 'Você está Offline',
-            comSpinner: ativo,
-            icone: ativo ? null : Ico.semInternet,
-            tamanho: 15,
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /* ================================================================== *
