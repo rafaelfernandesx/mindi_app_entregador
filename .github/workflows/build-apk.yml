@@ -62,10 +62,15 @@ jobs:
           if extras:
               i = xml.index('>', xml.index('<manifest')) + 1
               xml = xml[:i] + extras + xml[i:]
-              open(caminho, 'w', encoding='utf-8').write(xml)
-              print('manifest atualizado')
-          else:
-              print('manifest ja estava ok')
+              print('permissoes adicionadas')
+
+          # nome que aparece embaixo do icone no celular
+          import re as _re
+          xml = _re.sub(r'android:label="[^"]*"',
+                        'android:label="Mindi - Entregadores"', xml, count=1)
+
+          open(caminho, 'w', encoding='utf-8').write(xml)
+          print('manifest atualizado')
           EOF
           head -14 android/app/src/main/AndroidManifest.xml
 
@@ -149,16 +154,20 @@ jobs:
         run: |
           mkdir -p lib
           cp app_src/*.dart lib/
+          # o teste de exemplo criado pelo flutter create atrapalha a analise
+          rm -rf test
           ls lib
 
       - name: Garantir o pacote de idioma portugues
         run: flutter pub add flutter_localizations --sdk=flutter || true
 
-      - name: Garantir os pacotes do Firebase
+      - name: Garantir os pacotes extras
         run: |
           grep -q "firebase_core" pubspec.yaml || flutter pub add firebase_core
           grep -q "firebase_messaging" pubspec.yaml || flutter pub add firebase_messaging
-          grep -n "firebase" pubspec.yaml
+          grep -q "lucide_icons_flutter" pubspec.yaml || flutter pub add lucide_icons_flutter
+          grep -q "google_fonts" pubspec.yaml || flutter pub add google_fonts
+          cat pubspec.yaml
 
       - name: Baixar dependencias
         run: flutter pub get
