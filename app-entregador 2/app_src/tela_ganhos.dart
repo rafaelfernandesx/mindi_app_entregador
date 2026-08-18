@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'tema.dart';
+import 'estado.dart';
 import 'icones.dart';
 import 'api.dart';
 import 'modelos.dart';
@@ -32,6 +33,19 @@ class _TelaGanhosState extends State<TelaGanhos> {
   void initState() {
     super.initState();
     _buscar();
+    // recarrega sempre que o entregador volta para a aba Ganhos
+    // (senão os números ficam do momento em que a aba foi aberta)
+    abaSelecionada.addListener(_aoTrocarAba);
+  }
+
+  @override
+  void dispose() {
+    abaSelecionada.removeListener(_aoTrocarAba);
+    super.dispose();
+  }
+
+  void _aoTrocarAba() {
+    if (abaSelecionada.value == 1 && mounted) _buscar();
   }
 
   /* ---------------- período escolhido ---------------- */

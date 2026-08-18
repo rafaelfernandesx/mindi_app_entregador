@@ -4,7 +4,6 @@ import 'icones.dart';
 import 'api.dart';
 import 'sessao.dart';
 import 'estado.dart';
-import 'alerta.dart';
 import 'notificacoes.dart';
 import 'tela_historico.dart';
 import 'tela_trocar_senha.dart';
@@ -290,28 +289,6 @@ class _TelaPerfilState extends State<TelaPerfil> {
                         onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                                 builder: (_) => const TelaHistorico())),
-                      ),
-                    ]),
-
-                    // ---------- ALERTAS ----------
-                    const _Titulo('ALERTAS'),
-                    _Grupo(itens: [
-                      _Item(
-                        icone: Ico.moto,
-                        cor: T.green,
-                        fundo: T.greenSuave,
-                        titulo: 'Testar alerta de pedido',
-                        sub: 'Sente a vibração antes de começar a rodar',
-                        onTap: () {
-                          alertarPedidoNovo(forcar: true);
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: const Text(
-                                'Se não vibrou, veja se o celular está no silencioso ou com a vibração desligada.'),
-                            behavior: SnackBarBehavior.floating,
-                            backgroundColor: T.dark2,
-                            duration: const Duration(seconds: 5),
-                          ));
-                        },
                       ),
                     ]),
 

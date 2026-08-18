@@ -77,10 +77,19 @@ class Api {
 
     if (r.statusCode >= 200 && r.statusCode < 300) return corpo;
 
-    final msg = (corpo is Map && corpo['message'] is String)
-        ? corpo['message'] as String
-        : _mensagemPadrao(r.statusCode);
-    throw ApiErro(r.statusCode, msg);
+    // usa a mensagem que o servidor mandou (ele conhece o motivo exato).
+    // aceita as chaves mais comuns; se nao vier nenhuma, usa a nossa.
+    String? doServidor;
+    if (corpo is Map) {
+      for (final chave in ['message', 'error', 'detail', 'msg']) {
+        final v = corpo[chave];
+        if (v is String && v.trim().isNotEmpty) {
+          doServidor = v.trim();
+          break;
+        }
+      }
+    }
+    throw ApiErro(r.statusCode, doServidor ?? _mensagemPadrao(r.statusCode));
   }
 
   static String _mensagemPadrao(int s) {

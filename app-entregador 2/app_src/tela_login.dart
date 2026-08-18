@@ -396,17 +396,18 @@ class _Capa extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(22, 14, 22, 54),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // logo da Mindi (versao branca, em assets/logo_branca.png)
-              Image.asset(
-                'assets/logo_branca.png',
-                height: 27,
-                fit: BoxFit.contain,
+              Center(
+                child: Image.asset(
+                  'assets/logo_branca.png',
+                  height: 27,
+                  fit: BoxFit.contain,
+                ),
               ),
               const SizedBox(height: 26),
               const Text('Bora rodar?',
-                  textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
@@ -415,7 +416,6 @@ class _Capa extends StatelessWidget {
               const SizedBox(height: 7),
               Text(
                 'Receba os pedidos da loja e organize\nsuas entregas em tempo real.',
-                textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 13.5,
                     height: 1.45,
