@@ -48,7 +48,7 @@ class MeuApp extends StatelessWidget {
           // a chave muda junto com o tema: isso obriga TODAS as telas a
           // serem desenhadas de novo, senão algumas ficam com a cor velha
           key: ValueKey(escuro),
-          title: 'Entregador',
+          title: 'Mindi - Entregadores',
           debugShowCheckedModeBanner: false,
 
           // deixa datas e textos do sistema em português

@@ -19,7 +19,7 @@ class Ico {
 
   // abas
   static const IconData inicio = LucideIcons.home;
-  static const IconData ganhos = LucideIcons.wallet;
+  static const IconData ganhos = LucideIcons.trendingUp;
   static const IconData perfil = LucideIcons.user;
 
   // entrega
