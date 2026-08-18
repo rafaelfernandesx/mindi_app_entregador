@@ -5,6 +5,7 @@ import 'tab_bar_curva.dart';
 import 'tela_aguardando.dart';
 import 'tela_ganhos.dart';
 import 'tela_perfil.dart';
+import 'tela_login.dart';
 
 /* ================================================================== *
  *  ESQUELETO DO APP — segura as 3 telas + a tab bar
@@ -27,6 +28,37 @@ class _AppShellState extends State<AppShell> {
     TelaGanhos(),
     TelaPerfil(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    sessaoEncerrada.addListener(_aoEncerrarSessao);
+  }
+
+  @override
+  void dispose() {
+    sessaoEncerrada.removeListener(_aoEncerrarSessao);
+    super.dispose();
+  }
+
+  /// o servidor avisou que a conta foi removida ou desativada:
+  /// volta para o login e explica o motivo
+  void _aoEncerrarSessao() {
+    final motivo = sessaoEncerrada.value;
+    if (motivo == null || !mounted) return;
+    sessaoEncerrada.value = null;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const TelaLogin()),
+      (rota) => false,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(motivo),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: T.dark2,
+      duration: const Duration(seconds: 6),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {

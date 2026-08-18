@@ -316,13 +316,6 @@ class _TelaLoginState extends State<TelaLogin> {
                             decoration: BoxDecoration(
                               gradient: kGradRed,
                               borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: T.redDark.withOpacity(.28),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
                             ),
                             child: _entrando
                                 ? const SizedBox(

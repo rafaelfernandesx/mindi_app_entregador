@@ -64,6 +64,10 @@ class Pedido {
   final String? mapsUrl;
   final List<String> produtos;
 
+  // ---- reserva: o pedido está guardado só para este entregador ----
+  final bool reservadoPraMim;
+  final DateTime? reservaAte;
+
   const Pedido({
     required this.id,
     required this.numero,
@@ -79,6 +83,8 @@ class Pedido {
     this.trocoPara = 0,
     this.mapsUrl,
     this.produtos = const [],
+    this.reservadoPraMim = false,
+    this.reservaAte,
   });
 
   factory Pedido.fromJson(Map<String, dynamic> j) {
@@ -101,7 +107,18 @@ class Pedido {
           .whereType<Map>()
           .map((i) => '${_int(i['quantity'])}x ${i['name']}')
           .toList(),
+      reservadoPraMim: j['reservedForMe'] == true,
+      reservaAte: j['reservedUntil'] is String
+          ? DateTime.tryParse(j['reservedUntil'])?.toLocal()
+          : null,
     );
+  }
+
+  /// quanto tempo falta para a reserva expirar (nulo se não há reserva)
+  Duration? get tempoDeReserva {
+    if (!reservadoPraMim || reservaAte == null) return null;
+    final falta = reservaAte!.difference(DateTime.now());
+    return falta.isNegative ? Duration.zero : falta;
   }
 
   /// junta o detalhe novo com o que já tínhamos
@@ -120,6 +137,8 @@ class Pedido {
         trocoPara: d.trocoPara > 0 ? d.trocoPara : trocoPara,
         mapsUrl: d.mapsUrl ?? mapsUrl,
         produtos: d.produtos.isNotEmpty ? d.produtos : produtos,
+        reservadoPraMim: reservadoPraMim,
+        reservaAte: reservaAte,
       );
 
   String get taxaFormatada => reais(taxa);

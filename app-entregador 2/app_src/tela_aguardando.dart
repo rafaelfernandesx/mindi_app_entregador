@@ -6,6 +6,7 @@ import 'tema.dart';
 import 'icones.dart';
 import 'api.dart';
 import 'estado.dart';
+import 'sessao.dart';
 import 'modelos.dart';
 import 'sheet_novo_pedido.dart';
 import 'sheet_detalhes.dart';
@@ -29,6 +30,11 @@ class _TelaAguardandoState extends State<TelaAguardando> {
   /// ids em que ele já avisou "cheguei" (fica salvo no celular)
   Set<int> _jaChegou = {};
 
+  /// entregas ativas que o app já conhece — serve para perceber quando
+  /// o restaurante atribui um pedido direto, sem o entregador aceitar
+  final Set<int> _ativasConhecidas = {};
+  bool _primeiraCarga = true;
+
   Timer? _relogio;
   bool _carregando = false;
   bool _modalAberto = false;
@@ -38,6 +44,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
   void initState() {
     super.initState();
     _carregarChegadas();
+    _sincronizarTurno();
     _atualizar();
     // procura pedidos novos a cada 15 segundos
     _relogio = Timer.periodic(const Duration(seconds: 15), (_) => _atualizar());
@@ -56,6 +63,23 @@ class _TelaAguardandoState extends State<TelaAguardando> {
     pedidoDaNotificacao.removeListener(_aoTocarNotificacao);
     Localizacao.parar();
     super.dispose();
+  }
+
+  /// pergunta ao servidor se o entregador está online e corrige o
+  /// botão do topo. Sem isso o app pode mostrar "Online" enquanto o
+  /// painel do restaurante mostra "Offline".
+  Future<void> _sincronizarTurno() async {
+    if (!apiConfigurada) return;
+    try {
+      final me = await Api.meuPerfil();
+      if (!mounted) return;
+      if (me['isOnline'] is bool) {
+        entregadorAtivo.value = me['isOnline'] as bool;
+        await Sessao.atualizarDriver({'isOnline': me['isOnline']});
+      }
+    } catch (_) {
+      // sem internet: mantém o que estava salvo
+    }
   }
 
   /// lê do celular em quais pedidos ele já avisou que chegou
@@ -161,6 +185,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
 
       _cuidarDaLocalizacao();
       _avisarPedidoNovo();
+      _avisarEntregaAtribuida();
     } on ApiErro catch (e) {
       if (!mounted) return;
       setState(() {
@@ -186,6 +211,36 @@ class _TelaAguardandoState extends State<TelaAguardando> {
       _jaMostrados.add(p.id);
     }
     _alertar();
+  }
+
+  /// avisa quando aparece uma entrega que o entregador NÃO aceitou —
+  /// ou seja, o restaurante atribuiu direto para ele.
+  void _avisarEntregaAtribuida() {
+    if (!mounted) return;
+
+    final agora = _ativas.map((e) => e.pedido.id).toSet();
+
+    // na primeira carga só memoriza: o que já existia não é novidade
+    if (_primeiraCarga) {
+      _primeiraCarga = false;
+      _ativasConhecidas.addAll(agora);
+      return;
+    }
+
+    final novas = agora.difference(_ativasConhecidas);
+    _ativasConhecidas
+      ..clear()
+      ..addAll(agora);
+
+    // se ele acabou de aceitar, o alerta já tocou lá no _avisarPedidoNovo
+    final naoAceitasPorEle =
+        novas.where((id) => !_jaMostrados.contains(id)).toList();
+    if (naoAceitasPorEle.isEmpty) return;
+
+    _alertar();
+    _aviso(naoAceitasPorEle.length == 1
+        ? 'O restaurante enviou uma entrega para você'
+        : 'O restaurante enviou ${naoAceitasPorEle.length} entregas para você');
   }
 
   /* ================================================================ *
@@ -512,23 +567,56 @@ class _TelaAguardandoState extends State<TelaAguardando> {
 /* ================================================================== *
  *  CARD DE PEDIDO DISPONÍVEL
  * ================================================================== */
-class _CardDisponivel extends StatelessWidget {
+class _CardDisponivel extends StatefulWidget {
   final Pedido pedido;
   final VoidCallback onTap;
   const _CardDisponivel({required this.pedido, required this.onTap});
 
   @override
+  State<_CardDisponivel> createState() => _CardDisponivelState();
+}
+
+class _CardDisponivelState extends State<_CardDisponivel> {
+  Timer? _tique;
+
+  @override
+  void initState() {
+    super.initState();
+    // só precisa de relógio se o pedido estiver reservado
+    if (widget.pedido.reservadoPraMim) {
+      _tique = Timer.periodic(
+          const Duration(seconds: 1), (_) => mounted ? setState(() {}) : null);
+    }
+  }
+
+  @override
+  void dispose() {
+    _tique?.cancel();
+    super.dispose();
+  }
+
+  /// "2:41" — quanto falta da reserva
+  String get _contagem {
+    final d = widget.pedido.tempoDeReserva ?? Duration.zero;
+    final m = d.inMinutes;
+    final s = d.inSeconds % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final p = pedido;
+    final p = widget.pedido;
+    final reservado = p.reservadoPraMim && (p.tempoDeReserva ?? Duration.zero) > Duration.zero;
     return AfundaAoTocar(
-      onTap: onTap,
+      onTap: widget.onTap,
       escala: .985,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: T.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: T.redBorda, width: 1.5),
+          border: Border.all(
+              color: reservado ? T.amareloBorda : T.redBorda, width: 1.5),
           boxShadow: sombraCard(),
         ),
         child: Row(
@@ -558,19 +646,40 @@ class _CardDisponivel extends StatelessWidget {
                               color: T.ink,
                               letterSpacing: -.3)),
                       const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: T.greenSuave,
-                          borderRadius: BorderRadius.circular(7),
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: reservado ? T.amareloSuave : T.greenSuave,
+                            borderRadius: BorderRadius.circular(7),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (reservado) ...[
+                                Icon(Ico.relogio,
+                                    size: 11, color: T.amarelo),
+                                const SizedBox(width: 4),
+                              ],
+                              Flexible(
+                                child: Text(
+                                    reservado
+                                        ? 'PRA VOCÊ · $_contagem'
+                                        : 'DISPONÍVEL',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: .5,
+                                        color: reservado
+                                            ? T.amarelo
+                                            : T.greenEscuro)),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Text('DISPONÍVEL',
-                            style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: .5,
-                                color: T.greenEscuro)),
                       ),
                     ],
                   ),
@@ -821,14 +930,17 @@ class _BotaoAcaoState extends State<_BotaoAcao>
                       )
                     : kGradRed,
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: (verde ? T.green : T.redDark)
-                        .withOpacity(verde ? .22 : .20 + forca * .28),
-                    blurRadius: 10 + forca * 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
+                // sombra só no vermelho (é ela que faz o botão "respirar").
+                // no verde não tem sombra nenhuma.
+                boxShadow: verde
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: T.redDark.withOpacity(.20 + forca * .28),
+                          blurRadius: 10 + forca * 12,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
               ),
               child: filho,
             );

@@ -20,6 +20,7 @@ class TelaPerfil extends StatefulWidget {
 class _TelaPerfilState extends State<TelaPerfil> {
   int? _totalEntregas;
   bool _carregando = false;
+  bool _saindo = false;
 
   @override
   void initState() {
@@ -53,6 +54,12 @@ class _TelaPerfilState extends State<TelaPerfil> {
     try {
       final me = await Api.meuPerfil();
       await Sessao.atualizarDriver(me);
+
+      // quem manda no Online/Offline é o servidor: se o app achava que
+      // estava online e o servidor diz que não, o app se corrige
+      if (me['isOnline'] is bool) {
+        entregadorAtivo.value = me['isOnline'] as bool;
+      }
 
       final desde =
           _entrouEm ?? DateTime.now().subtract(const Duration(days: 365));
@@ -132,8 +139,16 @@ class _TelaPerfilState extends State<TelaPerfil> {
   }
 
   Future<void> _sair() async {
-    await Notificacoes.esquecer();
-    await Api.logout();
+    if (_saindo) return;
+    setState(() => _saindo = true);
+
+    try {
+      await Notificacoes.esquecer();
+      await Api.logout();
+    } catch (_) {
+      // mesmo se a API falhar, a sessão local é limpa e ele sai
+    }
+
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const TelaLogin()),
@@ -367,6 +382,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
                         fundo: T.redSuave,
                         titulo: 'Sair da conta',
                         perigo: true,
+                        carregando: _saindo,
                         onTap: _sair,
                       ),
                     ]),
@@ -438,6 +454,9 @@ class _Item extends StatelessWidget {
   /// quando vier preenchido, a linha mostra um interruptor no lugar da seta
   final bool? ligado;
   final ValueChanged<bool>? aoAlternar;
+
+  /// troca o ícone da esquerda por um spinner enquanto a ação roda
+  final bool carregando;
   const _Item({
     required this.icone,
     required this.cor,
@@ -448,6 +467,7 @@ class _Item extends StatelessWidget {
     this.onTap,
     this.ligado,
     this.aoAlternar,
+    this.carregando = false,
   });
 
   @override
@@ -467,7 +487,14 @@ class _Item extends StatelessWidget {
                 color: fundo,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icone, size: 17, color: cor),
+              child: carregando
+                  ? SizedBox(
+                      width: 17,
+                      height: 17,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2.2, color: cor),
+                    )
+                  : Icon(icone, size: 17, color: cor),
             ),
             const SizedBox(width: 13),
             Expanded(

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'sessao.dart';
+import 'estado.dart';
 
 /* ================================================================== *
  *  CONEXÃO COM A API
@@ -33,7 +34,10 @@ String get _basic =>
 class ApiErro implements Exception {
   final int status;
   final String mensagem;
-  ApiErro(this.status, this.mensagem);
+
+  /// código curto que o servidor manda ('deleted', 'disabled', ...)
+  final String codigo;
+  ApiErro(this.status, this.mensagem, {this.codigo = ''});
   @override
   String toString() => mensagem;
 }
@@ -80,16 +84,39 @@ class Api {
     // usa a mensagem que o servidor mandou (ele conhece o motivo exato).
     // aceita as chaves mais comuns; se nao vier nenhuma, usa a nossa.
     String? doServidor;
+    String codigo = '';
     if (corpo is Map) {
-      for (final chave in ['message', 'error', 'detail', 'msg']) {
+      for (final chave in ['message', 'detail', 'msg', 'error']) {
         final v = corpo[chave];
         if (v is String && v.trim().isNotEmpty) {
           doServidor = v.trim();
           break;
         }
       }
+      for (final chave in ['error', 'code', 'errorCode']) {
+        final v = corpo[chave];
+        if (v is String && v.trim().isNotEmpty) {
+          codigo = v.trim().toLowerCase();
+          break;
+        }
+      }
     }
-    throw ApiErro(r.statusCode, doServidor ?? _mensagemPadrao(r.statusCode));
+
+    final msg = doServidor ?? _mensagemPadrao(r.statusCode);
+
+    // Casos em que não adianta continuar logado: a sessão morreu do
+    // lado do servidor. O app limpa tudo e volta para o login.
+    final contaFora = r.statusCode == 403 &&
+        (codigo == 'deleted' || codigo == 'disabled');
+    final sessaoMorta = r.statusCode == 401 &&
+        (codigo == 'session_revoked' || codigo == 'unauthorized');
+
+    if ((contaFora || sessaoMorta) && Sessao.logado) {
+      Sessao.limpar();
+      sessaoEncerrada.value = msg;
+    }
+
+    throw ApiErro(r.statusCode, msg, codigo: codigo);
   }
 
   static String _mensagemPadrao(int s) {
@@ -162,6 +189,15 @@ class Api {
             query: query,
             comToken: comToken,
             jaTentouRenovar: true);
+      }
+      // não deu para renovar: a sessão acabou de vez
+      if (Sessao.logado) {
+        final antes = Sessao.logado;
+        Sessao.limpar();
+        if (antes) {
+          sessaoEncerrada.value =
+              'Sua sessão expirou. Entre de novo para continuar.';
+        }
       }
     }
 

@@ -73,6 +73,10 @@ Future<void> salvarChegadas(Set<int> ids) async {
   await p.setStringList(_kChegou, ids.map((e) => '$e').toList());
 }
 
+/// Quando o servidor diz que a conta foi removida ou desativada,
+/// guarda a mensagem aqui. O app fecha a sessão e volta para o login.
+final sessaoEncerrada = ValueNotifier<String?>(null);
+
 /// Aba aberta na barra de baixo (0 Início, 1 Ganhos, 2 Perfil)
 final abaSelecionada = ValueNotifier<int>(0);
 
