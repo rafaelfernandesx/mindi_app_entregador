@@ -6,6 +6,7 @@ import 'app_shell.dart';
 import 'api.dart';
 import 'notificacoes.dart';
 import 'estado.dart';
+import 'sessao.dart';
 
 /* ================================================================== *
  *  TELA DE LOGIN — "capa vermelha"
@@ -75,6 +76,17 @@ class _TelaLoginState extends State<TelaLogin> {
         telefone: _telefone.text,
         senha: _senha.text,
       );
+
+      // entra sempre PAUSADO: o entregador escolhe a hora de ficar online
+      entregadorAtivo.value = false;
+      if (apiConfigurada) {
+        try {
+          await Api.definirOnline(false);
+        } catch (_) {
+          // sem internet: o toggle continua mostrando pausado
+        }
+      }
+      await Sessao.atualizarDriver({'isOnline': false});
 
       // avisa o Firebase que este celular agora tem um entregador logado
       Notificacoes.registrar();
@@ -255,19 +267,13 @@ class _TelaLoginState extends State<TelaLogin> {
                         onTap: () => setState(() => _lembrar = !_lembrar),
                         child: Row(
                           children: [
+                            _Caixinha(marcada: _lembrar),
+                            const SizedBox(width: 10),
                             Text('Lembrar-me',
                                 style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     color: T.ink)),
-                            const SizedBox(width: 9),
-                            _Caixinha(marcada: _lembrar),
-                            const SizedBox(width: 9),
-                            Expanded(
-                              child: Text('não precisa digitar de novo',
-                                  style: TextStyle(
-                                      fontSize: 12.5, color: T.inkSoft)),
-                            ),
                           ],
                         ),
                       ),
@@ -390,17 +396,17 @@ class _Capa extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(22, 14, 22, 54),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // logo da Mindi (versao branca, em assets/logo_branca.png)
               Image.asset(
                 'assets/logo_branca.png',
-                height: 34,
+                height: 27,
                 fit: BoxFit.contain,
-                alignment: Alignment.centerLeft,
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 26),
               const Text('Bora rodar?',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
@@ -409,6 +415,7 @@ class _Capa extends StatelessWidget {
               const SizedBox(height: 7),
               Text(
                 'Receba os pedidos da loja e organize\nsuas entregas em tempo real.',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 13.5,
                     height: 1.45,
@@ -574,36 +581,20 @@ class _SheetEsqueciSenha extends StatelessWidget {
           const SizedBox(height: 18),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => abrirSuporte(context),
+            onTap: () => Navigator.of(context).maybePop(),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
                 gradient: kGradRed,
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Ico.ajuda, size: 19, color: Colors.white),
-                  const SizedBox(width: 9),
-                  const Text('Falar com o suporte',
-                      style: TextStyle(
-                          fontSize: 15.5,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white)),
-                ],
+              child: const Center(
+                child: Text('Entendi',
+                    style: TextStyle(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white)),
               ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Center(
-            child: TextButton(
-              onPressed: () => Navigator.of(context).maybePop(),
-              child: Text('Fechar',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: T.inkSoft)),
             ),
           ),
         ],

@@ -60,7 +60,8 @@ Future<void> salvarLoginSalvo({
 final abaSelecionada = ValueNotifier<int>(0);
 
 /// Entregador está aceitando pedidos? (o toggle do header controla isso)
-final entregadorAtivo = ValueNotifier<bool>(true);
+/// Começa PAUSADO: quem decide entrar em serviço é o entregador.
+final entregadorAtivo = ValueNotifier<bool>(false);
 
 /// Números do dia, mostrados no card de resumo da tela Início
 final ganhosHoje = ValueNotifier<double>(0);
