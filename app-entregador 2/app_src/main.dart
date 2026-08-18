@@ -45,6 +45,9 @@ class MeuApp extends StatelessWidget {
         final brilho = escuro ? Brightness.dark : Brightness.light;
 
         return MaterialApp(
+          // a chave muda junto com o tema: isso obriga TODAS as telas a
+          // serem desenhadas de novo, senão algumas ficam com a cor velha
+          key: ValueKey(escuro),
           title: 'Entregador',
           debugShowCheckedModeBanner: false,
 

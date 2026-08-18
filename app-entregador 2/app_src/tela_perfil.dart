@@ -171,14 +171,23 @@ class _TelaPerfilState extends State<TelaPerfil> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(nome,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                            fontSize: 19,
-                                            fontWeight: FontWeight.w800,
-                                            color: T.ink,
-                                            letterSpacing: -.4)),
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(nome,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                  fontSize: 19,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: T.ink,
+                                                  letterSpacing: -.4)),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Icon(Ico.selo,
+                                            size: 17, color: T.green),
+                                      ],
+                                    ),
                                     const SizedBox(height: 2),
                                     Text(Sessao.telefoneFormatado,
                                         style: TextStyle(
@@ -446,16 +455,7 @@ class _Item extends StatelessWidget {
               ),
             ),
             if (ligado != null)
-              Switch(
-                value: ligado!,
-                onChanged: aoAlternar,
-                activeColor: Colors.white,
-                activeTrackColor: T.redDark,
-                inactiveThumbColor: Colors.white,
-                inactiveTrackColor: T.fraco,
-                trackOutlineColor:
-                    WidgetStateProperty.all(Colors.transparent),
-              )
+              ToggleMindi(ligado: ligado!, aoMudar: aoAlternar)
             else
               Icon(Ico.avancar,
                   size: 20, color: T.fraco),

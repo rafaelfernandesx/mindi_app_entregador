@@ -63,12 +63,19 @@ class T {
 /// deixa a barra de navegação do Android transparente e com os
 /// ícones na cor certa para o tema atual
 void aplicarBarrasDoSistema() {
+  // o app desenha ate a borda da tela
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    systemNavigationBarColor: Colors.transparent,
-    systemNavigationBarDividerColor: Colors.transparent,
+    // a barra do Android fica da mesma cor do fundo do app, em vez de
+    // preta (no tema escuro) ou cinza (no claro)
+    systemNavigationBarColor: T.bg,
+    systemNavigationBarDividerColor: T.bg,
     systemNavigationBarContrastEnforced: false,
     systemNavigationBarIconBrightness:
         T.escuro ? Brightness.light : Brightness.dark,
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    statusBarBrightness: Brightness.dark,
   ));
 }
 
@@ -419,6 +426,53 @@ class Espera extends StatelessWidget {
                   letterSpacing: -.3)),
         ),
       ],
+    );
+  }
+}
+
+/* ---------- interruptor no mesmo estilo do header ---------- */
+class ToggleMindi extends StatelessWidget {
+  final bool ligado;
+  final ValueChanged<bool>? aoMudar;
+
+  /// cor da trilha quando está ligado
+  final Color? corLigado;
+
+  /// cor da trilha quando está desligado
+  final Color? corDesligado;
+
+  const ToggleMindi({
+    super.key,
+    required this.ligado,
+    this.aoMudar,
+    this.corLigado,
+    this.corDesligado,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: aoMudar == null ? null : () => aoMudar!(!ligado),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 38,
+        height: 22,
+        padding: const EdgeInsets.all(2.5),
+        alignment: ligado ? Alignment.centerRight : Alignment.centerLeft,
+        decoration: BoxDecoration(
+          color: ligado
+              ? (corLigado ?? const Color(0xFF2ECC71))
+              : (corDesligado ?? T.fraco),
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Container(
+          width: 17,
+          height: 17,
+          decoration: const BoxDecoration(
+              color: Colors.white, shape: BoxShape.circle),
+        ),
+      ),
     );
   }
 }
