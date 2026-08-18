@@ -86,12 +86,49 @@ class _TelaPerfilState extends State<TelaPerfil> {
     return '$anos ano${anos == 1 ? '' : 's'}';
   }
 
-  /// quanto ele recebe por entrega (repasse fixo)
-  String get _porEntrega {
-    final v = Sessao.driver['fixedValue'];
-    final n = v is num ? v.toDouble() : double.tryParse('$v');
-    if (n == null || n == 0) return '—';
-    return 'R\$ ${n.toStringAsFixed(0)}';
+  /* ---------------- como o entregador é pago ----------------
+     Campos que a API manda em /me:
+       repasseStrategy : none | neighborhood | fixed | percentage
+       fixedValue      : "5.00"  (texto, pode vir null)
+       percentageValue : "10.00" (texto, pode vir null)          */
+
+  double _numero(dynamic v) {
+    if (v is num) return v.toDouble();
+    return double.tryParse('$v'.replaceAll(',', '.')) ?? 0;
+  }
+
+  String get _estrategia =>
+      '${Sessao.driver['repasseStrategy'] ?? 'none'}'.toLowerCase();
+
+  /// número grande que aparece em cima
+  String get _valorRepasse {
+    switch (_estrategia) {
+      case 'percentage':
+        final p = _numero(Sessao.driver['percentageValue']);
+        final txt = p % 1 == 0 ? p.toStringAsFixed(0) : p.toStringAsFixed(1);
+        return '$txt%';
+      case 'fixed':
+        final v = _numero(Sessao.driver['fixedValue']);
+        return 'R\$ ${v.toStringAsFixed(2).replaceAll('.', ',')}';
+      case 'neighborhood':
+        return 'Por bairro';
+      default:
+        return 'R\$ 0,00';
+    }
+  }
+
+  /// texto pequeno embaixo do número
+  String get _rotuloRepasse {
+    switch (_estrategia) {
+      case 'percentage':
+        return '% por entrega';
+      case 'fixed':
+        return 'valor fixo';
+      case 'neighborhood':
+        return 'repasse';
+      default:
+        return 'por entrega';
+    }
   }
 
   Future<void> _sair() async {
@@ -244,8 +281,8 @@ class _TelaPerfilState extends State<TelaPerfil> {
                                   label: 'na equipe',
                                   divisor: true),
                               _Stat(
-                                  valor: _porEntrega,
-                                  label: 'por entrega',
+                                  valor: _valorRepasse,
+                                  label: _rotuloRepasse,
                                   cor: T.green,
                                   divisor: true),
                             ],
@@ -262,7 +299,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
                         cor: T.azul,
                         fundo: T.azulSuave,
                         titulo: 'Meus dados',
-                        sub: 'Nome e e-mail',
+                        sub: 'Seu nome no app',
                         onTap: () async {
                           await Navigator.of(context).push(MaterialPageRoute(
                               builder: (_) => const TelaEditarPerfil()));
@@ -491,15 +528,19 @@ class _Stat extends StatelessWidget {
             ),
           Column(
             children: [
-              Text(valor,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(valor,
+                    maxLines: 1,
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -.3,
+                        color: cor ?? T.ink)),
+              ),
+              Text(label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -.3,
-                      color: cor ?? T.ink)),
-              Text(label,
                   style: TextStyle(fontSize: 11, color: T.inkSoft)),
             ],
           ),

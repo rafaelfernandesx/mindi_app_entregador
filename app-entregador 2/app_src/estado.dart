@@ -56,6 +56,23 @@ Future<void> salvarLoginSalvo({
   }
 }
 
+/* ---------- pedidos em que o entregador já avisou "cheguei" ----------
+   Fica salvo no celular: se o app for fechado no meio da entrega, o
+   botão "Cheguei no local" não volta a aparecer e o cliente não
+   recebe a mensagem duas vezes. */
+const _kChegou = 'pedidosQueCheguei';
+
+Future<Set<int>> lerChegadas() async {
+  final p = await SharedPreferences.getInstance();
+  final lista = p.getStringList(_kChegou) ?? const [];
+  return lista.map(int.tryParse).whereType<int>().toSet();
+}
+
+Future<void> salvarChegadas(Set<int> ids) async {
+  final p = await SharedPreferences.getInstance();
+  await p.setStringList(_kChegou, ids.map((e) => '$e').toList());
+}
+
 /// Aba aberta na barra de baixo (0 Início, 1 Ganhos, 2 Perfil)
 final abaSelecionada = ValueNotifier<int>(0);
 

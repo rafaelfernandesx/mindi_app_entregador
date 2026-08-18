@@ -13,8 +13,6 @@ class TelaEditarPerfil extends StatefulWidget {
 class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
   late final TextEditingController _nome =
       TextEditingController(text: Sessao.nome);
-  late final TextEditingController _email = TextEditingController(
-      text: (Sessao.driver['email'] ?? '').toString());
 
   bool _salvando = false;
   String? _erro;
@@ -22,14 +20,7 @@ class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
   @override
   void dispose() {
     _nome.dispose();
-    _email.dispose();
     super.dispose();
-  }
-
-  bool get _emailValido {
-    final e = _email.text.trim();
-    if (e.isEmpty) return true; // e-mail é opcional
-    return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(e);
   }
 
   bool get _nomeValido {
@@ -37,7 +28,7 @@ class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
     return n >= 3 && n <= 10;
   }
 
-  bool get _podeSalvar => _nomeValido && _emailValido && !_salvando;
+  bool get _podeSalvar => _nomeValido && !_salvando;
 
   Future<void> _salvar() async {
     setState(() {
@@ -47,14 +38,13 @@ class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
 
     try {
       final nome = _nome.text.trim();
-      final email = _email.text.trim();
 
       if (apiConfigurada) {
-        await Api.editarPerfil(nome: nome, email: email);
+        await Api.editarPerfil(nome: nome);
       } else {
         await Future.delayed(const Duration(milliseconds: 600));
       }
-      await Sessao.atualizarDriver({'name': nome, 'email': email});
+      await Sessao.atualizarDriver({'name': nome});
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -101,14 +91,6 @@ class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
                   maximo: 10,
                   aoMudar: () => setState(() {}),
                 ),
-                const SizedBox(height: 14),
-                _Campo(
-                  rotulo: 'E-mail',
-                  controller: _email,
-                  dica: 'seu@email.com',
-                  teclado: TextInputType.emailAddress,
-                  aoMudar: () => setState(() {}),
-                ),
               ],
             ),
           ),
@@ -139,11 +121,6 @@ class _TelaEditarPerfilState extends State<TelaEditarPerfil> {
             ),
           ),
 
-          if (!_emailValido && _email.text.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text('E-mail inválido',
-                style: TextStyle(fontSize: 12.5, color: T.redDark)),
-          ],
           if (_erro != null) ...[
             const SizedBox(height: 12),
             Text(_erro!,

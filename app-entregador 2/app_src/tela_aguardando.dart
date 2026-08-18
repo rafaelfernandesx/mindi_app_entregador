@@ -26,6 +26,9 @@ class _TelaAguardandoState extends State<TelaAguardando> {
   /// ids que o entregador já viu (para não abrir o modal duas vezes)
   final Set<int> _jaMostrados = {};
 
+  /// ids em que ele já avisou "cheguei" (fica salvo no celular)
+  Set<int> _jaChegou = {};
+
   Timer? _relogio;
   bool _carregando = false;
   bool _modalAberto = false;
@@ -34,6 +37,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
   @override
   void initState() {
     super.initState();
+    _carregarChegadas();
     _atualizar();
     // procura pedidos novos a cada 15 segundos
     _relogio = Timer.periodic(const Duration(seconds: 15), (_) => _atualizar());
@@ -52,6 +56,18 @@ class _TelaAguardandoState extends State<TelaAguardando> {
     pedidoDaNotificacao.removeListener(_aoTocarNotificacao);
     Localizacao.parar();
     super.dispose();
+  }
+
+  /// lê do celular em quais pedidos ele já avisou que chegou
+  Future<void> _carregarChegadas() async {
+    final ids = await lerChegadas();
+    if (!mounted || ids.isEmpty) return;
+    setState(() {
+      _jaChegou = ids;
+      for (final e in _ativas) {
+        if (_jaChegou.contains(e.pedido.id)) e.chegou = true;
+      }
+    });
   }
 
   void _aoChegarPush() {
@@ -119,8 +135,9 @@ class _TelaAguardandoState extends State<TelaAguardando> {
           .toList();
       final g = resultados[2] as Map<String, dynamic>;
 
-      // mantém o "cheguei" que já foi marcado
+      // mantém o "cheguei" que já foi marcado (na sessão e o salvo no celular)
       final chegaram = {
+        ..._jaChegou,
         for (final a in _ativas)
           if (a.chegou) a.pedido.id
       };
@@ -225,6 +242,8 @@ class _TelaAguardandoState extends State<TelaAguardando> {
       case 'chegou':
         try {
           await Api.cheguei(p.id);
+          _jaChegou.add(p.id);
+          await salvarChegadas(_jaChegou);
           if (!mounted) return;
           setState(() => e.chegou = true);
           await mostrarClienteNotificado(
@@ -379,7 +398,9 @@ class _TelaAguardandoState extends State<TelaAguardando> {
           ],
           const SizedBox(height: 8),
         ],
-        _rodapeEspera(),
+        // com entrega ativa o entregador já tem o que fazer:
+        // o "aguardando novos pedidos" só atrapalha a leitura do card
+        if (_ativas.isEmpty) _rodapeEspera(),
       ],
     );
   }
@@ -499,9 +520,9 @@ class _CardDisponivel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = pedido;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return AfundaAoTocar(
       onTap: onTap,
+      escala: .985,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -606,9 +627,9 @@ class _CardAtiva extends StatelessWidget {
         : (entrega.emRota ? 'EM ROTA' : 'A CAMINHO');
 
     // tocar em qualquer lugar do card abre os detalhes do pedido
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return AfundaAoTocar(
       onTap: onDetalhes,
+      escala: .985,
       child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -686,8 +707,7 @@ class _CardAtiva extends StatelessWidget {
             children: [
               Expanded(
                 flex: 4,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
+                child: AfundaAoTocar(
                   onTap: onDetalhes,
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 13),
@@ -713,39 +733,120 @@ class _CardAtiva extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 flex: 6,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
+                child: _BotaoAcao(
+                  emRota: entrega.emRota,
                   onTap: entrega.emRota ? onDetalhes : onSair,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    decoration: BoxDecoration(
-                      gradient: kGradRed,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                            entrega.emRota
-                                ? Ico.navegar
-                                : Ico.seta,
-                            size: 17,
-                            color: Colors.white),
-                        const SizedBox(width: 8),
-                        Text(entrega.emRota ? 'Em rota' : 'Iniciar entrega',
-                            style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white)),
-                      ],
-                    ),
-                  ),
                 ),
               ),
             ],
           ),
         ],
       ),
+      ),
+    );
+  }
+}
+
+/* ---------------- botão principal do card ----------------
+   Vermelho quando falta agir, verde quando já está em rota.
+   Afunda ao toque (o entregador sente que pegou) e, enquanto
+   estiver vermelho, respira devagar para chamar o olho.
+-------------------------------------------------------------- */
+class _BotaoAcao extends StatefulWidget {
+  final bool emRota;
+  final VoidCallback onTap;
+  const _BotaoAcao({required this.emRota, required this.onTap});
+
+  @override
+  State<_BotaoAcao> createState() => _BotaoAcaoState();
+}
+
+class _BotaoAcaoState extends State<_BotaoAcao>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulso = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1600),
+  );
+  bool _pressionado = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.emRota) _pulso.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant _BotaoAcao old) {
+    super.didUpdateWidget(old);
+    if (widget.emRota && _pulso.isAnimating) {
+      _pulso.stop();
+      _pulso.value = 0;
+    } else if (!widget.emRota && !_pulso.isAnimating) {
+      _pulso.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulso.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final verde = widget.emRota;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      onTapDown: (_) => setState(() => _pressionado = true),
+      onTapUp: (_) => setState(() => _pressionado = false),
+      onTapCancel: () => setState(() => _pressionado = false),
+      child: AnimatedScale(
+        scale: _pressionado ? .96 : 1,
+        duration: const Duration(milliseconds: 110),
+        child: AnimatedBuilder(
+          animation: _pulso,
+          builder: (context, filho) {
+            // brilho que aumenta e diminui devagar
+            final forca = verde ? 0.0 : _pulso.value;
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              decoration: BoxDecoration(
+                gradient: verde
+                    ? LinearGradient(
+                        colors: [T.green, T.greenEscuro],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : kGradRed,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: (verde ? T.green : T.redDark)
+                        .withOpacity(verde ? .22 : .20 + forca * .28),
+                    blurRadius: 10 + forca * 12,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: filho,
+            );
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(verde ? Ico.navegar : Ico.seta,
+                  size: 17, color: Colors.white),
+              const SizedBox(width: 8),
+              Text(verde ? 'Em rota' : 'Iniciar entrega',
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white)),
+            ],
+          ),
+        ),
       ),
     );
   }

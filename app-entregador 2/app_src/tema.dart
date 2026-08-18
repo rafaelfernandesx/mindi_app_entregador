@@ -476,3 +476,50 @@ class ToggleMindi extends StatelessWidget {
     );
   }
 }
+
+/* ---------- afunda um pouco quando o dedo toca ----------
+   Serve para o entregador sentir que o toque pegou, mesmo
+   de luva ou com o celular no suporte da moto.
+--------------------------------------------------------- */
+class AfundaAoTocar extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+
+  /// quanto encolhe (1 = não encolhe). Cards usam menos que botões.
+  final double escala;
+
+  const AfundaAoTocar({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.escala = .96,
+  });
+
+  @override
+  State<AfundaAoTocar> createState() => _AfundaAoTocarState();
+}
+
+class _AfundaAoTocarState extends State<AfundaAoTocar> {
+  bool _pressionado = false;
+
+  void _muda(bool v) {
+    if (_pressionado != v && mounted) setState(() => _pressionado = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      onTapDown: (_) => _muda(true),
+      onTapUp: (_) => _muda(false),
+      onTapCancel: () => _muda(false),
+      child: AnimatedScale(
+        scale: _pressionado ? widget.escala : 1,
+        duration: const Duration(milliseconds: 110),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
+    );
+  }
+}

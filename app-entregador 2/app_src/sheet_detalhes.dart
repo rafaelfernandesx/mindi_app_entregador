@@ -266,32 +266,23 @@ class _SheetDetalhes extends StatelessWidget {
           ],
 
           // ---------- marcar como entregue ----------
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
+          AfundaAoTocar(
             onTap: () => Navigator.of(context).pop('entregue'),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 15),
               decoration: BoxDecoration(
                 color: T.green,
                 borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: T.green.withOpacity(.35),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Ico.checkCirculo, size: 22, color: Colors.white),
                   SizedBox(width: 10),
-                  Text('MARCAR COMO ENTREGUE',
+                  Text('Marcar como entregue',
                       style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 15.5,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: .3,
                           color: Colors.white)),
                 ],
               ),
