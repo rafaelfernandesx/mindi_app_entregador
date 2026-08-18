@@ -326,7 +326,7 @@ class Api {
     required DateTime ate,
   }) async {
     final r = await _enviar('GET', '/api/driver/history',
-        query: {'from': _data(de), 'to': _data(ate)});
+        query: {'from': _inicioDoDia(de), 'to': _fimDoDia(ate)});
     return _lista(r, 'deliveries');
   }
 
@@ -350,12 +350,25 @@ class Api {
     required DateTime ate,
   }) async {
     final r = await _enviar('GET', '/api/driver/earnings', query: {
-      'from': _data(de),
-      'to': _data(ate),
+      'from': _inicioDoDia(de),
+      'to': _fimDoDia(ate),
     });
     return (r as Map).cast<String, dynamic>();
   }
 
-  static String _data(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  /* ---------------- datas ----------------
+     O servidor guarda tudo em UTC. Aqui a gente manda o instante exato
+     do começo e do fim do dia NO HORÁRIO DO CELULAR, já convertido.
+     Sem isso, entregas feitas à noite caíam no dia seguinte. */
+
+  /// meia-noite do dia (horário local) convertida para UTC
+  static String _inicioDoDia(DateTime d) =>
+      DateTime(d.year, d.month, d.day).toUtc().toIso8601String();
+
+  /// 23:59:59 do dia (horário local) convertida para UTC
+  static String _fimDoDia(DateTime d) => DateTime(d.year, d.month, d.day)
+      .add(const Duration(days: 1))
+      .subtract(const Duration(seconds: 1))
+      .toUtc()
+      .toIso8601String();
 }
