@@ -24,6 +24,38 @@ Future<void> salvarTema(bool escuro) async {
   await p.setBool(_kTema, escuro);
 }
 
+/* ---------- "Lembrar" da tela de login ---------- */
+const _kLembrar = 'loginLembrar';
+const _kLoginTel = 'loginTelefone';
+const _kLoginSenha = 'loginSenha';
+
+/// devolve telefone e senha salvos (vazio se o entregador não marcou "Lembrar")
+Future<Map<String, String>> lerLoginSalvo() async {
+  final p = await SharedPreferences.getInstance();
+  if (p.getBool(_kLembrar) != true) return {};
+  return {
+    'telefone': p.getString(_kLoginTel) ?? '',
+    'senha': p.getString(_kLoginSenha) ?? '',
+  };
+}
+
+/// guarda (ou apaga) os dados de login conforme a caixinha "Lembrar"
+Future<void> salvarLoginSalvo({
+  required bool lembrar,
+  required String telefone,
+  required String senha,
+}) async {
+  final p = await SharedPreferences.getInstance();
+  await p.setBool(_kLembrar, lembrar);
+  if (lembrar) {
+    await p.setString(_kLoginTel, telefone);
+    await p.setString(_kLoginSenha, senha);
+  } else {
+    await p.remove(_kLoginTel);
+    await p.remove(_kLoginSenha);
+  }
+}
+
 /// Aba aberta na barra de baixo (0 Início, 1 Ganhos, 2 Perfil)
 final abaSelecionada = ValueNotifier<int>(0);
 

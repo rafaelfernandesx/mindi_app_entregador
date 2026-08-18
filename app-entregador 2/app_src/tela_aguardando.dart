@@ -68,6 +68,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
 
     final achou = _disponiveis.where((p) => p.id == id);
     if (achou.isNotEmpty) await _abrirPedido(achou.first);
+    // se o pedido já não estiver disponível, a lista da tela mostra o estado atual
   }
 
   /// toca e vibra quando chega pedido novo
@@ -145,7 +146,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
       );
 
       _cuidarDaLocalizacao();
-      _talvezAbrirModal();
+      _avisarPedidoNovo();
     } on ApiErro catch (e) {
       if (!mounted) return;
       setState(() {
@@ -158,15 +159,19 @@ class _TelaAguardandoState extends State<TelaAguardando> {
     }
   }
 
-  /// abre o modal automaticamente quando chega um pedido novo
-  Future<void> _talvezAbrirModal() async {
-    if (_modalAberto || !mounted || !entregadorAtivo.value) return;
+  /// só avisa (vibra e apita) quando chega pedido novo.
+  /// O modal NÃO abre sozinho: o entregador toca no card quando quiser.
+  void _avisarPedidoNovo() {
+    if (!mounted || !entregadorAtivo.value) return;
 
-    final novo = _disponiveis.where((p) => !_jaMostrados.contains(p.id));
-    if (novo.isEmpty) return;
+    final novos =
+        _disponiveis.where((p) => !_jaMostrados.contains(p.id)).toList();
+    if (novos.isEmpty) return;
 
+    for (final p in novos) {
+      _jaMostrados.add(p.id);
+    }
     _alertar();
-    await _abrirPedido(novo.first);
   }
 
   /* ================================================================ *
@@ -586,7 +591,11 @@ class _CardAtiva extends StatelessWidget {
         ? 'NO LOCAL'
         : (entrega.emRota ? 'EM ROTA' : 'A CAMINHO');
 
-    return Container(
+    // tocar em qualquer lugar do card abre os detalhes do pedido
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onDetalhes,
+      child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: T.card,
@@ -607,7 +616,7 @@ class _CardAtiva extends StatelessWidget {
                   color: T.redSuave,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(Ico.caminhao,
+                child: Icon(Ico.moto,
                     size: 21, color: T.redDark),
               ),
               const SizedBox(width: 12),
@@ -709,7 +718,7 @@ class _CardAtiva extends StatelessWidget {
                             size: 17,
                             color: Colors.white),
                         const SizedBox(width: 8),
-                        Text(entrega.emRota ? 'Em rota' : 'Sair para entrega',
+                        Text(entrega.emRota ? 'Em rota' : 'Iniciar entrega',
                             style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
@@ -722,6 +731,7 @@ class _CardAtiva extends StatelessWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }
