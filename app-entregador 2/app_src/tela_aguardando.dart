@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:vibration/vibration.dart';
 import 'tema.dart';
 import 'icones.dart';
 import 'api.dart';
@@ -71,12 +72,26 @@ class _TelaAguardandoState extends State<TelaAguardando> {
     // se o pedido já não estiver disponível, a lista da tela mostra o estado atual
   }
 
-  /// toca e vibra quando chega pedido novo
+  /// vibra forte quando chega pedido novo
   Future<void> _alertar() async {
+    // 1) vibração de verdade (motor do celular), em 3 toques longos
+    try {
+      final tem = await Vibration.hasVibrator();
+      if (tem == true) {
+        await Vibration.vibrate(
+          pattern: [0, 500, 250, 500, 250, 700],
+        );
+        return;
+      }
+    } catch (_) {
+      // sem suporte: cai no aviso mais fraco abaixo
+    }
+
+    // 2) plano B: o toque curto do próprio sistema
     for (var i = 0; i < 3; i++) {
-      HapticFeedback.heavyImpact();
+      HapticFeedback.vibrate();
       SystemSound.play(SystemSoundType.alert);
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 450));
     }
   }
 
@@ -420,13 +435,29 @@ class _TelaAguardandoState extends State<TelaAguardando> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Radar(ativo: ativo, tamanho: 168, nucleo: 68, icone: 31),
-                  const SizedBox(height: 18),
+                  if (ativo) ...[
+                    Radar(ativo: true, tamanho: 168, nucleo: 68, icone: 31),
+                    const SizedBox(height: 18),
+                  ],
                   _TituloEspera(
-                    texto: ativo ? 'Aguardando pedidos' : 'Você está pausado',
+                    texto:
+                        ativo ? 'Aguardando pedidos' : 'Você está Offline',
                     comSpinner: ativo,
+                    icone: ativo ? null : Ico.semInternet,
                     tamanho: 19,
                   ),
+                  if (!ativo) ...[
+                    const SizedBox(height: 6),
+                    SizedBox(
+                      width: 250,
+                      child: Text(
+                        'Fique online para receber pedidos',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 13.5, color: T.inkSoft, height: 1.45),
+                      ),
+                    ),
+                  ],
                   if (ativo) ...[
                     const SizedBox(height: 6),
                     SizedBox(
@@ -464,8 +495,9 @@ class _TelaAguardandoState extends State<TelaAguardando> {
             const SizedBox(height: 12),
           ],
           _TituloEspera(
-            texto: ativo ? 'Aguardando novos pedidos' : 'Você está pausado',
+            texto: ativo ? 'Aguardando novos pedidos' : 'Você está Offline',
             comSpinner: ativo,
+            icone: ativo ? null : Ico.semInternet,
             tamanho: 15,
           ),
         ],
@@ -780,8 +812,15 @@ class _TituloEspera extends StatelessWidget {
   final String texto;
   final bool comSpinner;
   final double tamanho;
+
+  /// icone pequeno a esquerda do texto (usado quando esta offline)
+  final IconData? icone;
+
   const _TituloEspera(
-      {required this.texto, required this.comSpinner, required this.tamanho});
+      {required this.texto,
+      required this.comSpinner,
+      required this.tamanho,
+      this.icone});
 
   @override
   Widget build(BuildContext context) {
@@ -797,6 +836,9 @@ class _TituloEspera extends StatelessWidget {
                 strokeWidth: 2.6, color: T.redDark),
           ),
           const SizedBox(width: 10),
+        ] else if (icone != null) ...[
+          Icon(icone, size: tamanho * .92, color: T.inkSoft),
+          const SizedBox(width: 9),
         ],
         Flexible(
           child: Text(texto,
