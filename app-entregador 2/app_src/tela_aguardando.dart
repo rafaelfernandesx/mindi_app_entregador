@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:vibration/vibration.dart';
+import 'alerta.dart';
 import 'tema.dart';
 import 'icones.dart';
 import 'api.dart';
@@ -55,6 +55,8 @@ class _TelaAguardandoState extends State<TelaAguardando> {
   }
 
   void _aoChegarPush() {
+    // vibra na hora que o aviso chega, sem esperar a lista atualizar
+    alertarPedidoNovo();
     if (mounted) _atualizar();
   }
 
@@ -73,27 +75,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
   }
 
   /// vibra forte quando chega pedido novo
-  Future<void> _alertar() async {
-    // 1) vibração de verdade (motor do celular), em 3 toques longos
-    try {
-      final tem = await Vibration.hasVibrator();
-      if (tem == true) {
-        await Vibration.vibrate(
-          pattern: [0, 500, 250, 500, 250, 700],
-        );
-        return;
-      }
-    } catch (_) {
-      // sem suporte: cai no aviso mais fraco abaixo
-    }
-
-    // 2) plano B: o toque curto do próprio sistema
-    for (var i = 0; i < 3; i++) {
-      HapticFeedback.vibrate();
-      SystemSound.play(SystemSoundType.alert);
-      await Future.delayed(const Duration(milliseconds: 450));
-    }
-  }
+  Future<void> _alertar() => alertarPedidoNovo();
 
   /// liga o envio de localização só quando existe entrega ativa
   void _cuidarDaLocalizacao() {
