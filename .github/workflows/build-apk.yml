@@ -19,6 +19,7 @@ on:
         options:
           - correcao
           - versao-nova
+          - play-store
 
 jobs:
   build:
@@ -228,7 +229,7 @@ jobs:
             exit 0
           fi
 
-          echo "$CHAVE" | base64 -d > android/app/mindi.jks
+          printf '%s' "$CHAVE" | tr -d '[:space:]' | base64 -d > android/app/mindi.jks
           cat > android/key.properties <<PROPS
           storeFile=mindi.jks
           storePassword=$SENHA
@@ -366,7 +367,7 @@ jobs:
         if: inputs.acao == 'versao-nova'
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
-        run: shorebird release android --artifact apk --no-confirm
+        run: shorebird release android --artifact apk --no-confirm -- --no-tree-shake-icons
 
       - name: Disponibilizar o APK para download
         if: inputs.acao == 'versao-nova'
@@ -374,6 +375,21 @@ jobs:
         with:
           name: app-entregador-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+
+      # ---------------- PLAY STORE (gera o .aab) ----------------
+      - name: Gerar o arquivo da Play Store
+        if: inputs.acao == 'play-store'
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+        run: shorebird release android --no-confirm -- --no-tree-shake-icons
+
+      - name: Disponibilizar o arquivo da Play Store
+        if: inputs.acao == 'play-store'
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-entregador-playstore
+          path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
       # ---------------- CORRECAO PELO AR ----------------
@@ -384,7 +400,7 @@ jobs:
         run: |
           shorebird patch android \
             --release-version "${{ steps.versao.outputs.valor }}" \
-            --no-confirm
+            --no-confirm -- --no-tree-shake-icons
 
       - name: Aviso final
         if: inputs.acao == 'correcao'
