@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'tema.dart';
 import 'icones.dart';
+import 'estado.dart';
 import 'modelos.dart';
 
 /* ================================================================== *
@@ -304,8 +305,14 @@ Future<void> mostrarClienteNotificado(
   String texto =
       'Uma mensagem foi enviada via WhatsApp informando que a entrega está a caminho.',
 }) {
+  // o entregador já pediu para não ver mais este aviso
+  if (!avisosDeConfirmacao.value) return Future<void>.value();
+
   final primeiro =
       pedido.cliente.isEmpty ? 'O cliente' : pedido.cliente.split(' ').first;
+
+  // fica marcado enquanto o modal está aberto; só é salvo ao fechar
+  var naoMostrarMais = false;
 
   return showModalBottomSheet<void>(
     context: context,
@@ -314,7 +321,8 @@ Future<void> mostrarClienteNotificado(
     barrierColor: Colors.black.withOpacity(.55),
     builder: (context) {
       final margem = MediaQuery.of(context).padding.bottom;
-      return Container(
+      return StatefulBuilder(
+        builder: (context, refazer) => Container(
         padding: EdgeInsets.fromLTRB(18, 22, 18, 18 + margem),
         decoration: BoxDecoration(
           color: T.card,
@@ -369,7 +377,35 @@ Future<void> mostrarClienteNotificado(
                   style: TextStyle(
                       fontSize: 14, color: T.greenEscuro, height: 1.4)),
             ),
-            const SizedBox(height: 18),
+
+            // "Não mostrar este aviso novamente"
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => refazer(() => naoMostrarMais = !naoMostrarMais),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Caixinha(marcada: naoMostrarMais),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text('Não mostrar este aviso novamente',
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: T.inkMedio)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => Navigator.of(context).pop(),
@@ -389,9 +425,13 @@ Future<void> mostrarClienteNotificado(
             ),
           ],
         ),
+        ),
       );
     },
-  );
+  ).then((_) {
+    // guarda a escolha só depois que o modal fecha
+    if (naoMostrarMais) salvarAvisosDeConfirmacao(false);
+  });
 }
 
 /* ================================================================== *

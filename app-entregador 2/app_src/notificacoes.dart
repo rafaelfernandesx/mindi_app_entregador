@@ -1,5 +1,7 @@
 import 'dart:typed_data';
+import 'dart:ui';
 
+import 'package:flutter/widgets.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -51,10 +53,22 @@ final _avisosLocais = FlutterLocalNotificationsPlugin();
 @pragma('vm:entry-point')
 Future<void> _mensagemEmSegundoPlano(RemoteMessage mensagem) async {
   // O sistema já exibe a notificação usando o canal "Pedidos novos".
+  // Aqui só anotamos o número do pedido: quando o entregador abrir o
+  // app, a tela Início procura por ele mesmo que não venha na lista.
+  try {
+    DartPluginRegistrant.ensureInitialized();
+    final id = _numeroDoPedido(mensagem.data['orderId']);
+    if (id != null) await guardarPedidoAvisado(id);
+  } catch (_) {}
 }
+
+int? _numeroDoPedido(dynamic bruto) =>
+    bruto is int ? bruto : int.tryParse('${bruto ?? ''}');
 
 /// Lê o orderId que veio na notificação e avisa a tela Início.
 void _guardarPedido(RemoteMessage mensagem) {
+  final id = _numeroDoPedido(mensagem.data['orderId']);
+  if (id != null) guardarPedidoAvisado(id);
   _abrirPedidoNaTela(mensagem.data['orderId']);
 }
 
@@ -71,8 +85,16 @@ void _aoTocarAvisoLocal(NotificationResponse resposta) {
   _abrirPedidoNaTela(resposta.payload);
 }
 
+/// o app está aberto na tela, não minimizado nem fechado
+bool get _appNaFrente =>
+    WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+
 class Notificacoes {
   static bool _pronto = false;
+
+  /// último pedido que o próprio app já avisou (evita aviso repetido)
+  static int? _ultimoAvisado;
+  static DateTime? _horaDoUltimoAviso;
   static String? _ultimoToken;
   static bool _ouvindoRefresh = false;
 
@@ -96,8 +118,15 @@ class Notificacoes {
 
       // app ABERTO na tela: o Android não mostra nada sozinho, então o
       // app desenha o aviso (com som e vibração) e atualiza a lista
-      FirebaseMessaging.onMessage.listen((mensagem) {
-        _mostrarAvisoDePedido(mensagem);
+      FirebaseMessaging.onMessage.listen((mensagem) async {
+        final id = _numeroDoPedido(mensagem.data['orderId']);
+        if (id != null) await guardarPedidoAvisado(id);
+
+        // Só desenha o aviso se o app estiver mesmo na frente do
+        // entregador. Fora isso quem desenha é o Android, e desenhar
+        // aqui também faria a notificação aparecer duas vezes.
+        if (_appNaFrente) _mostrarAvisoDePedido(mensagem);
+
         avisoDePedidoNovo.value = avisoDePedidoNovo.value + 1;
       });
 
@@ -139,6 +168,18 @@ class Notificacoes {
     try {
       final aviso = mensagem.notification;
       final dados = mensagem.data;
+
+      // mesmo pedido avisado há pouco: não repete
+      final numero = _numeroDoPedido(dados['orderId']);
+      final agora = DateTime.now();
+      if (numero != null &&
+          numero == _ultimoAvisado &&
+          _horaDoUltimoAviso != null &&
+          agora.difference(_horaDoUltimoAviso!).inSeconds < 60) {
+        return;
+      }
+      _ultimoAvisado = numero;
+      _horaDoUltimoAviso = agora;
 
       var titulo = aviso?.title ?? '';
       if (titulo.isEmpty) titulo = '${dados['title'] ?? ''}';

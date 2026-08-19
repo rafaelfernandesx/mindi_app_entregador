@@ -24,6 +24,25 @@ Future<void> salvarTema(bool escuro) async {
   await p.setBool(_kTema, escuro);
 }
 
+/* ---------- avisos de "cliente notificado" ----------
+   O entregador pode marcar "Não mostrar este aviso novamente" no modal.
+   A escolha fica salva no celular e vale para os dois avisos: o de
+   iniciar a entrega e o de chegar no local. */
+final avisosDeConfirmacao = ValueNotifier<bool>(true);
+
+const _kAvisosConf = 'avisosDeConfirmacao';
+
+Future<void> carregarAvisosDeConfirmacao() async {
+  final p = await SharedPreferences.getInstance();
+  avisosDeConfirmacao.value = p.getBool(_kAvisosConf) ?? true;
+}
+
+Future<void> salvarAvisosDeConfirmacao(bool mostrar) async {
+  avisosDeConfirmacao.value = mostrar;
+  final p = await SharedPreferences.getInstance();
+  await p.setBool(_kAvisosConf, mostrar);
+}
+
 /* ---------- "Lembrar" da tela de login ---------- */
 const _kLembrar = 'loginLembrar';
 const _kLoginTel = 'loginTelefone';
@@ -101,6 +120,60 @@ final pedidoDaNotificacao = ValueNotifier<int?>(null);
 /// Sobe +1 toda vez que chega uma notificação de pedido novo.
 /// Serve para a tela Início buscar na API na hora, sem esperar os 15s.
 final avisoDePedidoNovo = ValueNotifier<int>(0);
+
+/* ---------- pedidos anunciados por notificação ----------
+   Guarda o número dos pedidos que chegaram por notificação, mesmo que
+   o entregador não tenha tocado nela. Se o pedido não vier nas listas
+   do servidor, a tela Início busca ele pelo número e mostra assim
+   mesmo — o entregador não fica com a tela vazia depois de ser avisado.
+   Some sozinho depois de 30 minutos. */
+const _kAvisados = 'pedidosAvisados';
+const _kValidade = Duration(minutes: 30);
+
+Future<void> guardarPedidoAvisado(int id) async {
+  final p = await SharedPreferences.getInstance();
+  final agora = DateTime.now().millisecondsSinceEpoch;
+  final mapa = _lerMapaAvisados(p);
+  mapa[id] = agora;
+  await _salvarMapaAvisados(p, mapa);
+}
+
+Future<List<int>> lerPedidosAvisados() async {
+  final p = await SharedPreferences.getInstance();
+  final mapa = _lerMapaAvisados(p);
+  return mapa.keys.toList();
+}
+
+Future<void> esquecerPedidoAvisado(int id) async {
+  final p = await SharedPreferences.getInstance();
+  final mapa = _lerMapaAvisados(p);
+  if (mapa.remove(id) == null) return;
+  await _salvarMapaAvisados(p, mapa);
+}
+
+Map<int, int> _lerMapaAvisados(SharedPreferences p) {
+  final limite =
+      DateTime.now().subtract(_kValidade).millisecondsSinceEpoch;
+  final mapa = <int, int>{};
+  for (final linha in p.getStringList(_kAvisados) ?? const <String>[]) {
+    final partes = linha.split(':');
+    if (partes.length != 2) continue;
+    final id = int.tryParse(partes[0]);
+    final quando = int.tryParse(partes[1]);
+    if (id == null || quando == null) continue;
+    if (quando < limite) continue; // velho demais
+    mapa[id] = quando;
+  }
+  return mapa;
+}
+
+Future<void> _salvarMapaAvisados(
+    SharedPreferences p, Map<int, int> mapa) async {
+  await p.setStringList(
+    _kAvisados,
+    mapa.entries.map((e) => '${e.key}:${e.value}').toList(),
+  );
+}
 
 double _paraNumero(dynamic v) {
   if (v is num) return v.toDouble();

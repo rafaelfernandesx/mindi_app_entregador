@@ -526,3 +526,29 @@ class _AfundaAoTocarState extends State<AfundaAoTocar> {
     );
   }
 }
+
+/* ================================================================== *
+ *  CAIXINHA DE MARCAR — o quadradinho de "Lembrar-me" e afins
+ * ================================================================== */
+class Caixinha extends StatelessWidget {
+  final bool marcada;
+  const Caixinha({super.key, required this.marcada});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      width: 22,
+      height: 22,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: marcada ? T.redDark : Colors.transparent,
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: marcada ? T.redDark : T.borda, width: 1.6),
+      ),
+      child: marcada
+          ? const Icon(Ico.check, size: 14, color: Colors.white)
+          : null,
+    );
+  }
+}

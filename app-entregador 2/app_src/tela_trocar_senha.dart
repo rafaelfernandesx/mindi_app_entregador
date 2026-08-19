@@ -95,6 +95,7 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
                   rotulo: 'Senha atual',
                   controller: _atual,
                   escondido: !_verAtual,
+                  maximo: 8,
                   aoVerAlternar: () => setState(() => _verAtual = !_verAtual),
                   aoMudar: () => setState(() {}),
                 ),

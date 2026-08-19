@@ -186,6 +186,8 @@ class _TelaAguardandoState extends State<TelaAguardando> {
         media: g['averagePerDelivery'],
       );
 
+      await _resgatarPedidosAvisados();
+
       _cuidarDaLocalizacao();
       _avisarPedidoNovo();
       _avisarEntregaAtribuida();
@@ -198,6 +200,47 @@ class _TelaAguardandoState extends State<TelaAguardando> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _carregando = false);
+    }
+  }
+
+  /* ---------------------------------------------------------------- *
+   *  REDE DE SEGURANÇA
+   *  Às vezes o entregador recebe a notificação de um pedido mas ele
+   *  não vem em nenhuma das duas listas do servidor (nem disponível,
+   *  nem meu). Nesse caso o app procura o pedido pelo número e mostra
+   *  assim mesmo, para a tela não ficar vazia depois do aviso.
+   * ---------------------------------------------------------------- */
+  Future<void> _resgatarPedidosAvisados() async {
+    final ids = await lerPedidosAvisados();
+    if (ids.isEmpty || !mounted) return;
+
+    for (final id in ids) {
+      final jaEstaNaTela = _ativas.any((a) => a.pedido.id == id) ||
+          _disponiveis.any((d) => d.id == id);
+      if (jaEstaNaTela) {
+        await esquecerPedidoAvisado(id);
+        continue;
+      }
+
+      try {
+        final p = Pedido.fromJson(await Api.detalhePedido(id));
+        if (!mounted) return;
+
+        // pedido já encerrado: não precisa mostrar mais
+        const encerrados = ['delivered', 'cancelled', 'canceled'];
+        if (p.id == 0 || encerrados.contains(p.status)) {
+          await esquecerPedidoAvisado(id);
+          continue;
+        }
+
+        setState(() {
+          final repetido = _disponiveis.any((d) => d.id == p.id) ||
+              _ativas.any((a) => a.pedido.id == p.id);
+          if (!repetido) _disponiveis = [p, ..._disponiveis];
+        });
+      } catch (_) {
+        // servidor não devolveu o pedido: tenta de novo na próxima volta
+      }
     }
   }
 
@@ -574,8 +617,8 @@ class _CardDisponivelState extends State<_CardDisponivel> {
   @override
   void initState() {
     super.initState();
-    // só precisa de relógio se o pedido estiver reservado
-    if (widget.pedido.reservadoPraMim) {
+    // só precisa de relógio se o pedido tiver prazo de reserva
+    if (widget.pedido.reservadoPraMim && widget.pedido.reservaAte != null) {
       _tique = Timer.periodic(
           const Duration(seconds: 1), (_) => mounted ? setState(() {}) : null);
     }
@@ -598,7 +641,15 @@ class _CardDisponivelState extends State<_CardDisponivel> {
   @override
   Widget build(BuildContext context) {
     final p = widget.pedido;
-    final reservado = p.reservadoPraMim && (p.tempoDeReserva ?? Duration.zero) > Duration.zero;
+    // Reserva vencida: o servidor ainda não atualizou, mas o prazo já
+    // passou — trata como pedido comum.
+    final venceu =
+        p.reservaAte != null && p.tempoDeReserva == Duration.zero;
+
+    // Guardado para este entregador. Quando não vem prazo do servidor
+    // (caso de um entregador só), mostra o selo sem contagem.
+    final reservado = p.reservadoPraMim && !venceu;
+    final mostraTempo = reservado && p.reservaAte != null;
     return AfundaAoTocar(
       onTap: widget.onTap,
       escala: .985,
@@ -649,16 +700,18 @@ class _CardDisponivelState extends State<_CardDisponivel> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (reservado) ...[
+                              if (mostraTempo) ...[
                                 Icon(Ico.relogio,
                                     size: 11, color: T.amarelo),
                                 const SizedBox(width: 4),
                               ],
                               Flexible(
                                 child: Text(
-                                    reservado
-                                        ? 'PRA VOCÊ · $_contagem'
-                                        : 'DISPONÍVEL',
+                                    !reservado
+                                        ? 'DISPONÍVEL'
+                                        : mostraTempo
+                                            ? 'PRA VOCÊ · $_contagem'
+                                            : 'PRA VOCÊ',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
@@ -723,9 +776,11 @@ class _CardAtiva extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = entrega.pedido;
+    // aceitou -> ACEITO | clicou em iniciar entrega -> EM ROTA
+    // | clicou em cheguei -> NO LOCAL
     final selo = entrega.chegou
         ? 'NO LOCAL'
-        : (entrega.emRota ? 'EM ROTA' : 'A CAMINHO');
+        : (entrega.emRota ? 'EM ROTA' : 'ACEITO');
 
     // tocar em qualquer lugar do card abre os detalhes do pedido
     return AfundaAoTocar(

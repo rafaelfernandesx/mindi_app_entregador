@@ -272,7 +272,7 @@ class _TelaLoginState extends State<TelaLogin> {
                         onTap: () => setState(() => _lembrar = !_lembrar),
                         child: Row(
                           children: [
-                            _Caixinha(marcada: _lembrar),
+                            Caixinha(marcada: _lembrar),
                             const SizedBox(width: 10),
                             Text('Lembrar-me',
                                 style: TextStyle(
@@ -428,30 +428,6 @@ class _Capa extends StatelessWidget {
 }
 
 /* ---------- caixinha de marcar (checkbox) ---------- */
-class _Caixinha extends StatelessWidget {
-  final bool marcada;
-  const _Caixinha({required this.marcada});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      width: 22,
-      height: 22,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: marcada ? T.redDark : Colors.transparent,
-        borderRadius: BorderRadius.circular(7),
-        border:
-            Border.all(color: marcada ? T.redDark : T.borda, width: 1.6),
-      ),
-      child: marcada
-          ? const Icon(Ico.check, size: 14, color: Colors.white)
-          : null,
-    );
-  }
-}
-
 /* ---------------- máscara (00) 0 0000-0000 ---------------- */
 class _MascaraTelefone extends TextInputFormatter {
   @override
