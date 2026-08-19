@@ -27,3 +27,4 @@ flutter:
   assets:
     - assets/entregador.png
     - assets/logo_branca.png
+    - shorebird.yaml
