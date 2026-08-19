@@ -121,6 +121,29 @@ final pedidoDaNotificacao = ValueNotifier<int?>(null);
 /// Serve para a tela Início buscar na API na hora, sem esperar os 15s.
 final avisoDePedidoNovo = ValueNotifier<int>(0);
 
+/* ---------- memória dos avisos já dados ----------
+   Guarda quais pedidos o app já anunciou (vibrou). Fica AQUI, fora da
+   tela, de propósito: quando o entregador troca o tema, o app inteiro
+   é redesenhado e a tela Início nasce de novo. Se essa memória
+   morasse lá dentro, ela nasceria vazia e todo pedido que estivesse
+   na tela pareceria novidade — o celular vibrava sem motivo. */
+final pedidosJaAvisados = <int>{};
+
+/// Entregas ativas que o app já conhecia (para saber quando o
+/// restaurante atribui uma entrega direto ao entregador)
+final entregasConhecidas = <int>{};
+
+/// Na primeira carga o app só memoriza: o que já existia não é novidade.
+bool primeiraCargaDeEntregas = true;
+
+/// Esquece tudo — usado ao entrar e ao sair da conta, para um
+/// entregador não herdar os avisos do outro.
+void limparMemoriaDeAvisos() {
+  pedidosJaAvisados.clear();
+  entregasConhecidas.clear();
+  primeiraCargaDeEntregas = true;
+}
+
 /* ---------- pedidos anunciados por notificação ----------
    Guarda o número dos pedidos que chegaram por notificação, mesmo que
    o entregador não tenha tocado nela. Se o pedido não vier nas listas

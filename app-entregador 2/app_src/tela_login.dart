@@ -88,6 +88,9 @@ class _TelaLoginState extends State<TelaLogin> {
       }
       await Sessao.atualizarDriver({'isOnline': false});
 
+      // cada entregador começa com a memória de avisos limpa
+      limparMemoriaDeAvisos();
+
       // avisa o Firebase que este celular agora tem um entregador logado
       Notificacoes.registrar();
 

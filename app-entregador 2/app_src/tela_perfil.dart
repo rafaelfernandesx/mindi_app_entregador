@@ -143,7 +143,8 @@ class _TelaPerfilState extends State<TelaPerfil> {
     setState(() => _saindo = true);
 
     try {
-      await Notificacoes.esquecer();
+      limparMemoriaDeAvisos();
+    await Notificacoes.esquecer();
       await Api.logout();
     } catch (_) {
       // mesmo se a API falhar, a sessão local é limpa e ele sai

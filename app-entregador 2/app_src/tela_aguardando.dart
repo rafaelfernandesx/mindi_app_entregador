@@ -24,16 +24,11 @@ class _TelaAguardandoState extends State<TelaAguardando> {
   List<Pedido> _disponiveis = [];
   List<EntregaAtiva> _ativas = [];
 
-  /// ids que o entregador já viu (para não abrir o modal duas vezes)
-  final Set<int> _jaMostrados = {};
-
   /// ids em que ele já avisou "cheguei" (fica salvo no celular)
   Set<int> _jaChegou = {};
 
-  /// entregas ativas que o app já conhece — serve para perceber quando
-  /// o restaurante atribui um pedido direto, sem o entregador aceitar
-  final Set<int> _ativasConhecidas = {};
-  bool _primeiraCarga = true;
+  // A memória de "o que eu já avisei" mora em estado.dart, não aqui:
+  // quando o tema muda, esta tela é recriada e perderia a memória.
 
   Timer? _relogio;
   bool _carregando = false;
@@ -250,11 +245,11 @@ class _TelaAguardandoState extends State<TelaAguardando> {
     if (!mounted || !entregadorAtivo.value) return;
 
     final novos =
-        _disponiveis.where((p) => !_jaMostrados.contains(p.id)).toList();
+        _disponiveis.where((p) => !pedidosJaAvisados.contains(p.id)).toList();
     if (novos.isEmpty) return;
 
     for (final p in novos) {
-      _jaMostrados.add(p.id);
+      pedidosJaAvisados.add(p.id);
     }
     _alertar();
   }
@@ -267,20 +262,20 @@ class _TelaAguardandoState extends State<TelaAguardando> {
     final agora = _ativas.map((e) => e.pedido.id).toSet();
 
     // na primeira carga só memoriza: o que já existia não é novidade
-    if (_primeiraCarga) {
-      _primeiraCarga = false;
-      _ativasConhecidas.addAll(agora);
+    if (primeiraCargaDeEntregas) {
+      primeiraCargaDeEntregas = false;
+      entregasConhecidas.addAll(agora);
       return;
     }
 
-    final novas = agora.difference(_ativasConhecidas);
-    _ativasConhecidas
+    final novas = agora.difference(entregasConhecidas);
+    entregasConhecidas
       ..clear()
       ..addAll(agora);
 
     // se ele acabou de aceitar, o alerta já tocou lá no _avisarPedidoNovo
     final naoAceitasPorEle =
-        novas.where((id) => !_jaMostrados.contains(id)).toList();
+        novas.where((id) => !pedidosJaAvisados.contains(id)).toList();
     if (naoAceitasPorEle.isEmpty) return;
 
     _alertar();
@@ -294,7 +289,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
    * ================================================================ */
 
   Future<void> _abrirPedido(Pedido p) async {
-    _jaMostrados.add(p.id);
+    pedidosJaAvisados.add(p.id);
     _modalAberto = true;
 
     final aceitou = await mostrarNovoPedido(context, p);
@@ -312,7 +307,7 @@ class _TelaAguardandoState extends State<TelaAguardando> {
         _disponiveis = _disponiveis.where((d) => d.id != p.id).toList();
         if (!_ativas.any((a) => a.pedido.id == p.id)) {
           _ativas = [..._ativas, EntregaAtiva(p)];
-          _ativasConhecidas.add(p.id);
+          entregasConhecidas.add(p.id);
         }
       });
 
