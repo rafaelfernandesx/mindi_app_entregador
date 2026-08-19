@@ -1,8 +1,24 @@
 name: Gerar APK
 
+# Este workflow so roda quando voce clica em "Run workflow" e escolhe
+# o que quer fazer:
+#
+#   correcao     -> manda a correcao pelo ar (o app se atualiza sozinho)
+#   versao-nova  -> gera um APK novo para instalar no celular
+#
+# Use "versao-nova" quando entrar um recurso novo do celular
+# (notificacao, camera, GPS, pacote novo). Nos outros casos, "correcao".
 on:
-  push:
   workflow_dispatch:
+    inputs:
+      acao:
+        description: 'O que voce quer fazer'
+        required: true
+        type: choice
+        default: correcao
+        options:
+          - correcao
+          - versao-nova
 
 jobs:
   build:
@@ -201,6 +217,102 @@ jobs:
           EOF
           grep -n "esugaring" android/app/build.gradle* || true
 
+      - name: Assinar o APK sempre com a mesma chave
+        env:
+          CHAVE: ${{ secrets.MINDI_KEYSTORE_BASE64 }}
+          SENHA: ${{ secrets.MINDI_KEYSTORE_SENHA }}
+        run: |
+          if [ -z "$CHAVE" ]; then
+            echo "AVISO: sem a chave de assinatura. O APK sai com a chave temporaria."
+            echo "Cadastre os segredos MINDI_KEYSTORE_BASE64 e MINDI_KEYSTORE_SENHA."
+            exit 0
+          fi
+
+          echo "$CHAVE" | base64 -d > android/app/mindi.jks
+          cat > android/key.properties <<PROPS
+          storeFile=mindi.jks
+          storePassword=$SENHA
+          keyAlias=mindi
+          keyPassword=$SENHA
+          PROPS
+
+          python3 - <<'EOF'
+          import os
+          app = 'android/app/build.gradle.kts'
+          if not os.path.exists(app):
+              app = 'android/app/build.gradle'
+          kts = app.endswith('.kts')
+          a = open(app, encoding='utf-8').read()
+
+          if 'MINDI_ASSINATURA' in a:
+              raise SystemExit(0)
+
+          if kts:
+              # os imports precisam ficar no topo do arquivo
+              topo = ('// MINDI_ASSINATURA\n'
+                      'import java.util.Properties\n'
+                      'import java.io.FileInputStream\n\n')
+              # ja as variaveis so podem vir DEPOIS do bloco plugins { }
+              lidachave = ('\nval chaveProps = Properties()\n'
+                           'val chaveArquivo = rootProject.file("key.properties")\n'
+                           'if (chaveArquivo.exists()) '
+                           '{ chaveProps.load(FileInputStream(chaveArquivo)) }\n')
+              assinatura = '\n'.join([
+                  '',
+                  '    signingConfigs {',
+                  '        create("mindi") {',
+                  '            keyAlias = chaveProps["keyAlias"] as String',
+                  '            keyPassword = chaveProps["keyPassword"] as String',
+                  '            storeFile = file(chaveProps["storeFile"] as String)',
+                  '            storePassword = chaveProps["storePassword"] as String',
+                  '        }',
+                  '    }',
+                  '',
+              ])
+              alvo = 'signingConfigs.getByName("debug")'
+              novo = 'signingConfigs.getByName("mindi")'
+          else:
+              topo = '// MINDI_ASSINATURA\n'
+              lidachave = ('\ndef chaveProps = new Properties()\n'
+                           'def chaveArquivo = rootProject.file("key.properties")\n'
+                           'if (chaveArquivo.exists()) '
+                           '{ chaveArquivo.withInputStream { chaveProps.load(it) } }\n')
+              assinatura = '\n'.join([
+                  '',
+                  '    signingConfigs {',
+                  '        mindi {',
+                  "            keyAlias chaveProps['keyAlias']",
+                  "            keyPassword chaveProps['keyPassword']",
+                  "            storeFile file(chaveProps['storeFile'])",
+                  "            storePassword chaveProps['storePassword']",
+                  '        }',
+                  '    }',
+                  '',
+              ])
+              alvo = 'signingConfig signingConfigs.debug'
+              novo = 'signingConfig signingConfigs.mindi'
+
+          a = topo + a
+
+          # variaveis logo depois do fim do bloco plugins { }
+          p = a.index('plugins {')
+          fimplugins = a.index('}', p) + 1
+          a = a[:fimplugins] + '\n' + lidachave + a[fimplugins:]
+
+          i = a.index('android {')
+          j = a.index('\n', i) + 1
+          a = a[:j] + assinatura + a[j:]
+
+          if alvo in a:
+              a = a.replace(alvo, novo)
+              print('release passou a usar a chave da Mindi')
+          else:
+              print('AVISO: nao achei a linha de assinatura do release')
+
+          open(app, 'w', encoding='utf-8').write(a)
+          EOF
+          echo "chave de assinatura configurada"
+
       - name: Colocar o codigo das telas no lugar certo
         run: |
           mkdir -p lib
@@ -222,18 +334,62 @@ jobs:
           grep -q "flutter_local_notifications" pubspec.yaml || flutter pub add flutter_local_notifications
           cat pubspec.yaml
 
-      - name: Baixar dependencias
-        run: flutter pub get
+      - name: Conferir o arquivo do Shorebird
+        run: |
+          if [ ! -f shorebird.yaml ]; then
+            echo "ERRO: shorebird.yaml nao encontrado na pasta do projeto."
+            exit 1
+          fi
+          grep -q "shorebird.yaml" pubspec.yaml || {
+            echo "ERRO: falta a linha '- shorebird.yaml' na lista de assets do pubspec.yaml"
+            exit 1
+          }
+          cat shorebird.yaml
 
-      - name: Conferir se o codigo compila
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings || true
+      - name: Instalar o Shorebird
+        uses: shorebirdtech/setup-shorebird@v1
+        with:
+          cache: true
 
-      - name: Compilar o APK
-        run: flutter build apk --release
+      - name: Descobrir a versao do app
+        id: versao
+        run: |
+          V=$(grep -m1 '^version:' pubspec.yaml | awk '{print $2}')
+          echo "Versao do app: $V"
+          echo "valor=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Limpar a trava de dependencias
+        run: rm -f pubspec.lock
+
+      # ---------------- VERSAO NOVA (gera APK) ----------------
+      - name: Gerar a versao nova
+        if: inputs.acao == 'versao-nova'
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+        run: shorebird release android --artifact apk --no-confirm
 
       - name: Disponibilizar o APK para download
+        if: inputs.acao == 'versao-nova'
         uses: actions/upload-artifact@v4
         with:
           name: app-entregador-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+
+      # ---------------- CORRECAO PELO AR ----------------
+      - name: Enviar a correcao pelo ar
+        if: inputs.acao == 'correcao'
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+        run: |
+          shorebird patch android \
+            --release-version "${{ steps.versao.outputs.valor }}" \
+            --no-confirm
+
+      - name: Aviso final
+        if: inputs.acao == 'correcao'
+        run: |
+          echo "=================================================="
+          echo " Correcao publicada para a versao ${{ steps.versao.outputs.valor }}"
+          echo " Os apps se atualizam sozinhos na proxima abertura."
+          echo "=================================================="
