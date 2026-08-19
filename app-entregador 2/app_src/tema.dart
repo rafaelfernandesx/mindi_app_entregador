@@ -198,7 +198,7 @@ class BarraBoasVindas extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Olá,',
+                        Text('Bem-vindo,',
                             style: TextStyle(
                                 fontSize: 12.5,
                                 color: Colors.white.withOpacity(.78))),
